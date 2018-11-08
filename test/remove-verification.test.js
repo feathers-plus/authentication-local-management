@@ -1,6 +1,6 @@
 
 const assert = require('chai').assert;
-const hooks = require('../src/index').hooks;
+const { removeVerification } = require('../src/index').hooks;
 
 let context;
 
@@ -24,7 +24,7 @@ describe('remove-verification.test.js', () => {
   });
 
   it('works with verified user', () => {
-    assert.doesNotThrow(() => { hooks.removeVerification()(context); });
+    assert.doesNotThrow(() => { removeVerification()(context); });
 
     const user = context.result;
     assert.property(user, 'isVerified');
@@ -39,7 +39,7 @@ describe('remove-verification.test.js', () => {
   it('works with unverified user', () => {
     context.result.isVerified = false;
 
-    assert.doesNotThrow(() => { hooks.removeVerification()(context); });
+    assert.doesNotThrow(() => { removeVerification()(context); });
 
     const user = context.result;
     assert.property(user, 'isVerified');
@@ -54,12 +54,12 @@ describe('remove-verification.test.js', () => {
   it('works if addVerification not run', () => {
     context.result = {};
 
-    assert.doesNotThrow(() => { hooks.removeVerification()(context); });
+    assert.doesNotThrow(() => { removeVerification()(context); });
   });
 
   it('noop if server initiated', () => {
     context.params.provider = undefined;
-    assert.doesNotThrow(() => { hooks.removeVerification()(context); });
+    assert.doesNotThrow(() => { removeVerification()(context); });
 
     const user = context.result;
     assert.property(user, 'isVerified');
@@ -73,7 +73,7 @@ describe('remove-verification.test.js', () => {
 
   it('works with multiple verified user', () => {
     context.result = [context.result, context.result]
-    assert.doesNotThrow(() => { hooks.removeVerification()(context); });
+    assert.doesNotThrow(() => { removeVerification()(context); });
 
     context.result.forEach(user => {
       assert.property(user, 'isVerified');
@@ -89,12 +89,12 @@ describe('remove-verification.test.js', () => {
   it('does not throw with damaged hook', () => {
     delete context.result;
 
-    assert.doesNotThrow(() => { hooks.removeVerification()(context); });
+    assert.doesNotThrow(() => { removeVerification()(context); });
   });
 
   it('throws if not after', () => {
     context.type = 'before';
 
-    assert.throws(() => { hooks.removeVerification()(context); });
+    assert.throws(() => { removeVerification()(context); });
   });
 });

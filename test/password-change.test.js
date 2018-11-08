@@ -1,65 +1,41 @@
 
 const assert = require('chai').assert;
-const auth = require('@feathersjs/authentication-local').hooks;
 const bcrypt = require('bcryptjs');
 const feathers = require('@feathersjs/feathers');
 const feathersMemory = require('feathers-memory');
 const authLocalMgnt = require('../src/index');
 const SpyOn = require('./helpers/basic-spy');
-const { hashPassword } = require('../src/helpers');
-const { timeoutEachTest, maxTimeAllTests } = require('./helpers/config');
+const { hashPasswordAndTokens, bcryptCompare,  bcryptCompareSync } = require('./helpers/hash-password-and-tokens-fake');
+const { timeoutEachTest } = require('./helpers/config');
 
 const makeUsersService = (options) => function (app) {
   app.use('/users', feathersMemory(options));
+
+  app.service('users').hooks({
+    before: {
+      create: hashPasswordAndTokens(),
+      patch: hashPasswordAndTokens(),
+    }
+  });
 };
 
 // users DB
 const users_Id = [
-  { _id: 'a', email: 'a', plainPassword: 'aa', plainNewPassword: 'xx', isVerified: false },
-  { _id: 'b', email: 'b', plainPassword: 'bb', plainNewPassword: 'yy', isVerified: true },
+  { _id: 'a', email: 'a', plainPassword: 'aa', password: 'aa', plainNewPassword: 'xx', isVerified: false },
+  { _id: 'b', email: 'b', plainPassword: 'bb', password: 'bb', plainNewPassword: 'yy', isVerified: true },
 ];
 
 const usersId = [
-  { id: 'a', email: 'a', plainPassword: 'aa', plainNewPassword: 'xx', isVerified: false },
-  { id: 'b', email: 'b', plainPassword: 'bb', plainNewPassword: 'yy', isVerified: true },
+  { id: 'a', email: 'a', plainPassword: 'aa', password: 'aa', plainNewPassword: 'xx', isVerified: false },
+  { id: 'b', email: 'b', plainPassword: 'bb', password: 'bb', plainNewPassword: 'yy', isVerified: true },
 ];
 
 // Tests
-describe('password-change.js', function () {
+describe('password-change.test.js', function () {
   this.timeout(timeoutEachTest);
 
-  describe('bcrypt', function () {
-    let app;
-
-    beforeEach(async () => {
-      app = feathers();
-      app.setup();
-
-      // Ugly but makes test much faster
-      if (!users_Id[0].password) {
-        users_Id[0].password = await hashPassword(app, users_Id[0].plainPassword);
-        users_Id[0].newPassword = await hashPassword(app, users_Id[0].plainNewPassword);
-        users_Id[1].password = await hashPassword(app, users_Id[1].plainPassword);
-        users_Id[1].newPassword = await hashPassword(app, users_Id[1].plainNewPassword);
-
-        usersId[0].password = users_Id[0].password;
-        usersId[0].newPassword = users_Id[0].newPassword;
-        usersId[1].password = users_Id[1].password;
-        usersId[1].newPassword = users_Id[1].newPassword
-      }
-    });
-
-    it('compare plain passwords to encrypted ones', function () {
-      assert.isOk(bcrypt.compareSync(users_Id[0].plainPassword, users_Id[0].password), '_Id [0]');
-      assert.isOk(bcrypt.compareSync(users_Id[1].plainPassword, users_Id[1].password), '_Id [1]');
-
-      assert.isOk(bcrypt.compareSync(usersId[0].plainNewPassword, usersId[0].newPassword), 'Id [0]');
-      assert.isOk(bcrypt.compareSync(usersId[1].plainNewPassword, usersId[1].newPassword), 'Id [1]');
-    });
-  });
-
-  ['_id',/* 'id'*/].forEach(idType => {
-    ['paginated',/* 'non-paginated'*/].forEach(pagination => {
+  ['_id', 'id'].forEach(idType => {
+    ['paginated', 'non-paginated'].forEach(pagination => {
       describe(`passwordChange ${pagination} ${idType}`, () => {
         describe('standard', () => {
           let app;
@@ -72,7 +48,7 @@ describe('password-change.js', function () {
             app = feathers();
             app.configure(makeUsersService({ id: idType, paginate: pagination === 'paginated' }));
             app.configure(authLocalMgnt({
-
+              bcryptCompare,
             }));
             app.setup();
             authLocalMgntService = app.service('authManagement');
@@ -100,7 +76,7 @@ describe('password-change.js', function () {
               const user = await usersService.get(result.id || result._id);
 
               assert.strictEqual(result.isVerified, true, 'isVerified not true');
-              assert.isOk(bcrypt.compareSync(user.plainNewPassword, user.password), `wrong password [1]`);
+              assert.isOk(bcryptCompareSync(user.plainNewPassword, user.password), `wrong password [1]`);
             } catch (err) {
               console.log(err);
               assert.strictEqual(err, null, 'err code set');
@@ -124,7 +100,7 @@ describe('password-change.js', function () {
               const user = await usersService.get(result.id || result._id);
 
               assert.strictEqual(result.isVerified, false, 'isVerified not false');
-              assert.isOk(bcrypt.compareSync(user.plainNewPassword, user.password), `[0]`);
+              assert.isOk(bcryptCompareSync(user.plainNewPassword, user.password), `[0]`);
             } catch (err) {
               console.log(err);
               assert.strictEqual(err, null, 'err code set');
@@ -170,7 +146,8 @@ describe('password-change.js', function () {
             app = feathers();
             app.configure(makeUsersService({ id: idType, paginate: pagination === 'paginated' }));
             app.configure(authLocalMgnt({
-              notifier: spyNotifier.callWith
+              notifier: spyNotifier.callWith,
+              bcryptCompare,
             }));
             app.setup();
             authLocalMgntService = app.service('authManagement');
@@ -198,7 +175,7 @@ describe('password-change.js', function () {
               const user = await usersService.get(result.id || result._id);
 
               assert.strictEqual(result.isVerified, true, 'isVerified not true');
-              assert.isOk(bcrypt.compareSync(user.plainNewPassword, user.password), `[1`);
+              assert.isOk(bcryptCompareSync(user.plainNewPassword, user.password), `[1`);
               assert.deepEqual(
                 spyNotifier.result()[0].args,
                 [

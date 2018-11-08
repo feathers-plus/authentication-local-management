@@ -4,6 +4,7 @@ const feathers = require('@feathersjs/feathers');
 const feathersMemory = require('feathers-memory');
 const authLocalMgnt = require('../src/index');
 const SpyOn = require('./helpers/basic-spy');
+const { hashPasswordAndTokens } = require('./helpers/hash-password-and-tokens-fake');
 const { timeoutEachTest, maxTimeAllTests } = require('./helpers/config');
 
 const now = Date.now();
@@ -11,6 +12,13 @@ const timeout = timeoutEachTest;
 
 const makeUsersService = (options) => function (app) {
   app.use('/users', feathersMemory(options));
+
+  app.service('users').hooks({
+    before: {
+      create: hashPasswordAndTokens(),
+      patch: hashPasswordAndTokens(),
+    }
+  });
 };
 
 const usersId = [
@@ -25,7 +33,7 @@ const users_Id = [
 
 ['_id', 'id'].forEach(idType => {
   ['paginated', 'non-paginated'].forEach(pagination => {
-    describe(`send-reset-pwd.js ${pagination} ${idType}`, function () {
+    describe(`send-reset-pwd.test.js ${pagination} ${idType}`, function () {
       this.timeout(timeoutEachTest);
 
       describe('basic', () => {
@@ -61,9 +69,8 @@ const users_Id = [
 
             assert.strictEqual(user.isVerified, true, 'isVerified not true');
             assert.isString(user.resetToken, 'resetToken not String');
-            assert.equal(user.resetToken.length, 60, 'reset token wrong length');
-            assert.equal(user.resetShortToken.length, 60, 'reset short token wrong length');
-            assert.match(user.resetShortToken, /^\$2[ayb]\$.{56}$/);
+            assert.equal(user.resetToken.length, 36, 'reset token wrong length');
+            assert.equal(user.resetShortToken.length, 8, 'reset short token wrong length');
             aboutEqualDateTime(user.resetExpires, makeDateTime());
           } catch (err) {
             console.log(err);
@@ -153,9 +160,8 @@ const users_Id = [
 
             assert.strictEqual(user.isVerified, true, 'isVerified not true');
             assert.isString(user.resetToken, 'resetToken not String');
-            assert.equal(user.resetToken.length, 60, 'reset token wrong length');
-            assert.equal(user.resetShortToken.length, 60, 'reset short token wrong length');
-            assert.match(user.resetShortToken, /^\$2[ayb]\$.{56}$/);
+            assert.equal(user.resetToken.length, 26, 'reset token wrong length');
+            assert.equal(user.resetShortToken.length, 11, 'reset short token wrong length');
             aboutEqualDateTime(user.resetExpires, makeDateTime());
           } catch (err) {
             console.log(err);
@@ -200,9 +206,8 @@ const users_Id = [
 
             assert.strictEqual(user.isVerified, true, 'isVerified not true');
             assert.isString(user.resetToken, 'resetToken not String');
-            assert.equal(user.resetToken.length, 60, 'reset token wrong length');
-            assert.equal(user.resetShortToken.length, 60, 'reset short token wrong length');
-            assert.match(user.resetShortToken, /^\$2[ayb]\$.{56}$/);
+            assert.equal(user.resetToken.length, 26, 'reset token wrong length');
+            assert.equal(user.resetShortToken.length, 11, 'reset short token wrong length');
             aboutEqualDateTime(user.resetExpires, makeDateTime());
           } catch (err) {
             console.log(err);
@@ -252,8 +257,7 @@ const users_Id = [
 
             assert.strictEqual(user.isVerified, true, 'isVerified not true');
             assert.isString(user.resetToken, 'resetToken not String');
-            assert.equal(user.resetToken.length, 60, 'reset token wrong length');
-            assert.match(user.resetToken, /^\$2[ayb]\$.{56}$/);
+            assert.equal(user.resetToken.length, 36, 'reset token wrong length');
             aboutEqualDateTime(user.resetExpires, makeDateTime());
 
             const expected = spyNotifier.result()[0].args

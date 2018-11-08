@@ -58,6 +58,7 @@
   },
   "devDependencies": {
     "@feathersjs/feathers": "^3.2.3",
+    "bcrypt": "^3.0.2",
     "chai": "^4.2.0",
     "feathers-memory": "^2.2.0",
     "istanbul": "^1.1.0-alpha.1",

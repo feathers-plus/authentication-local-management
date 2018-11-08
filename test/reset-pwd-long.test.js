@@ -4,13 +4,20 @@ const feathers = require('@feathersjs/feathers');
 const feathersMemory = require('feathers-memory');
 const authLocalMgnt = require('../src/index');
 const SpyOn = require('./helpers/basic-spy');
-const { hashPassword } = require('../src/helpers')
+const { hashPasswordAndTokens } = require('./helpers/hash-password-and-tokens-fake');
 const { timeoutEachTest, maxTimeAllTests } = require('./helpers/config');
 
 const now = Date.now();
 
 const makeUsersService = (options) => function (app) {
   app.use('/users', feathersMemory(options));
+
+  app.service('users').hooks({
+    before: {
+      create: hashPasswordAndTokens(),
+      patch: hashPasswordAndTokens(),
+    }
+  });
 };
 
 const fieldToHash = 'resetToken';
@@ -33,7 +40,7 @@ const usersId = [
 // Tests
 ['_id', 'id'].forEach(idType => {
   ['paginated', 'non-paginated'].forEach(pagination => {
-    describe(`reset-pwd-long.js ${pagination} ${idType}`, function () {
+    describe(`reset-pwd-long.test.js ${pagination} ${idType}`, function () {
       this.timeout(timeoutEachTest);
 
       describe('basic', () => {
@@ -51,15 +58,6 @@ const usersId = [
           }));
           app.setup();
           authLocalMgntService = app.service('authManagement');
-
-          // Ugly but makes test much faster
-          if (users_Id[0][fieldToHash].length < 15) {
-            for (let i = 0, ilen = users_Id.length; i < ilen; i++) {
-              const hashed = await hashPassword(app, users_Id[i][fieldToHash]);
-              users_Id[i][fieldToHash] = hashed;
-              usersId[i][fieldToHash] = hashed;
-            }
-          }
 
           usersService = app.service('users');
           await usersService.remove(null);
@@ -82,7 +80,7 @@ const usersId = [
             assert.strictEqual(user.resetShortToken, null, 'resetShortToken not null');
             assert.strictEqual(user.resetExpires, null, 'resetExpires not null');
             assert.isString(user.password, 'password not a string');
-            assert.equal(user.password.length, 60, 'password wrong length');
+            assert.isAbove(user.password.length, 6, 'password wrong length');
           } catch (err) {
             console.log(err);
             assert.strictEqual(err, null, 'err code set');
@@ -102,7 +100,7 @@ const usersId = [
             assert.strictEqual(result.resetShortToken, undefined, 'resetShortToken not undefined');
             assert.strictEqual(result.resetExpires, undefined, 'resetExpires not undefined');
             assert.isString(user.password, 'password not a string');
-            assert.equal(user.password.length, 60, 'password wrong length');
+            assert.isAbove(user.password.length, 6, 'password wrong length');
           } catch (err) {
             console.log(err);
             assert.strictEqual(err, null, 'err code set');
@@ -191,9 +189,8 @@ const usersId = [
             assert.strictEqual(user.isVerified, true, 'isVerified not true');
             assert.strictEqual(user.resetToken, null, 'resetToken not null');
             assert.strictEqual(user.resetExpires, null, 'resetExpires not null');
-
             assert.isString(user.password, 'password not a string');
-            assert.equal(user.password.length, 60, 'password wrong length');
+            assert.isAbove(user.password.length, 6, 'password wrong length');
 
             assert.deepEqual(
               spyNotifier.result()[0].args,

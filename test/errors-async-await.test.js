@@ -2,7 +2,7 @@
 const assert = require('chai').assert;
 const errors = require('@feathersjs/errors');
 
-describe('errors-async-await.js', () => {
+describe('errors-async-await.test.js', () => {
   describe('1 deep', () => {
     describe('call as async function', () => {
       it('successful', async () => {

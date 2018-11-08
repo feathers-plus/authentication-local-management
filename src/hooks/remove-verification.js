@@ -15,9 +15,9 @@ function removeVerification (ifReturnTokens) {
     users.forEach(user => {
       if (!('isVerified' in user) && hook.method === 'create') {
         /* eslint-disable no-console */
-        console.warn('Property isVerified not found in user properties. (removeVerification)');
+        console.warn('Property isVerified not found in user properties.');
         console.warn('Have you added authManagement\'s properties to your model? (Refer to README.md)');
-        console.warn('Have you added the addVerification hook on users::create?');
+        console.warn('Have you added the addVerification hook on users::create? (removeVerification)');
         /* eslint-enable */
       }
 

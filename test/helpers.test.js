@@ -14,7 +14,7 @@ const users_Id = [
   { _id: 'a', email: 'a', username: 'john a', sensitiveData: 'some secret' }
 ];
 
-describe('helpers.js - sanitization', () => {
+describe('helpers.test.js - sanitization', () => {
   it('allows to stringify sanitized user object', () => {
     const user = {
       id: 1,

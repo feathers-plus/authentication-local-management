@@ -6,7 +6,6 @@ const deconstructId = require('./helpers/deconstruct-id');
 const ensureObjPropsValid = require('./helpers/ensure-obj-props-valid');
 const ensureValuesAreStrings = require('./helpers/ensure-values-are-strings');
 const getUserData = require('./helpers/get-user-data');
-const hashPassword = require('./helpers/hash-password');
 const notifier = require('./helpers/notifier');
 
 const debug = makeDebug('authLocalMgnt:resetPassword');
@@ -55,7 +54,7 @@ async function resetPassword (options, query, tokens, password) {
     promises.push(comparePasswords(tokens[key], user1[key], () =>
       new errors.BadRequest('Reset Token is incorrect. (authLocalMgnt)',
         { errors: { $className: 'incorrectToken' } })
-    ));
+    ), options.bcryptCompare);
   });
 
   try {
@@ -73,7 +72,7 @@ async function resetPassword (options, query, tokens, password) {
   }
 
   const user2 = await usersService.patch(user1[usersServiceIdName], {
-    password: await hashPassword(options.app, password),
+    password,
     resetToken: null,
     resetShortToken: null,
     resetExpires: null

@@ -25,7 +25,7 @@ async function identityChange (options, identifyUser, password, changesIdentifyU
   const user1 = getUserData(users);
 
   try {
-    await comparePasswords(password, user1.password, () => {});
+    await comparePasswords(password, user1.password, () => {}, options.bcryptCompare);
   } catch (err) {
     throw new errors.BadRequest('Password is incorrect.',
       { errors: { password: 'Password is incorrect.', $className: 'badParams' } }

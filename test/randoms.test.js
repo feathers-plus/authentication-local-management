@@ -3,7 +3,7 @@ const assert = require('chai').assert;
 const randomDigits = require('../src/helpers').randomDigits;
 const randomBytes = require('../src/helpers').randomBytes;
 
-describe('randoms.js', () => {
+describe('randoms.test.js', () => {
   describe('randomDigits', () => {
     it('correct length', () => {
       const str = randomDigits(6);

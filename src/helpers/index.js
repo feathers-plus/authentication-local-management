@@ -9,7 +9,6 @@ const ensureValuesAreStrings = require('./ensure-values-are-strings');
 const getLongToken = require('./get-long-token');
 const getShortToken = require('./get-short-token');
 const getUserData = require('./get-user-data');
-const hashPassword = require('./hash-password');
 const isNullsy = require('./is-nullsy');
 const notifier = require('./notifier');
 const randomBytes = require('./random-bytes');
@@ -28,7 +27,6 @@ module.exports = {
   getLongToken,
   getShortToken,
   getUserData,
-  hashPassword,
   isNullsy,
   notifier,
   randomBytes: (...args) => randomBytes(...args), // for testing, make safe from hacking

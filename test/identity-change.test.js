@@ -1,32 +1,38 @@
 
 const assert = require('chai').assert;
-const bcrypt = require('bcryptjs');
 const feathers = require('@feathersjs/feathers');
 const feathersMemory = require('feathers-memory');
 const authLocalMgnt = require('../src/index');
 const SpyOn = require('./helpers/basic-spy');
-const { hashPassword } = require('../src/helpers')
+const { hashPasswordAndTokens, bcryptCompare } = require('./helpers/hash-password-and-tokens-fake');
 const { timeoutEachTest } = require('./helpers/config');
 
 const makeUsersService = (options) => function (app) {
   app.use('/users', feathersMemory(options));
+
+  app.service('users').hooks({
+    before: {
+      create: hashPasswordAndTokens(),
+      patch: hashPasswordAndTokens(),
+    }
+  });
 };
 
 // users DB
 const users_Id = [
-  { _id: 'a', email: 'a', plainPassword: 'aa', isVerified: false },
-  { _id: 'b', email: 'b', plainPassword: 'bb', isVerified: true },
+  { _id: 'a', email: 'a', plainPassword: 'aa', password: 'aa', isVerified: false },
+  { _id: 'b', email: 'b', plainPassword: 'bb', password: 'bb', isVerified: true },
 ];
 
 const usersId = [
-  { id: 'a', email: 'a', plainPassword: 'aa', isVerified: false },
-  { id: 'b', email: 'b', plainPassword: 'bb', isVerified: true },
+  { id: 'a', email: 'a', plainPassword: 'aa', password: 'aa', isVerified: false },
+  { id: 'b', email: 'b', plainPassword: 'bb', password: 'bb', isVerified: true },
 ];
 
 // Tests
 ['_id', 'id'].forEach(idType => {
   ['paginated', 'non-paginated'].forEach(pagination => {
-    describe(`identity-change.js ${pagination} ${idType}`, function () {
+    describe(`identity-change.test.js ${pagination} ${idType}`, function () {
       this.timeout(timeoutEachTest);
 
       describe('standard', () => {
@@ -40,19 +46,10 @@ const usersId = [
           app = feathers();
           app.configure(makeUsersService({ id: idType, paginate: pagination === 'paginated' }));
           app.configure(authLocalMgnt({
-
+            bcryptCompare,
           }));
           app.setup();
           authLocalMgntService = app.service('authManagement');
-
-          // Ugly but makes test much faster
-          if (!users_Id[0].password) {
-            users_Id[0].password = await hashPassword(app, users_Id[0].plainPassword);
-            users_Id[1].password = await hashPassword(app, users_Id[1].plainPassword);
-
-            usersId[0].password = users_Id[0].password;
-            usersId[1].password = users_Id[1].password;
-          }
 
           usersService = app.service('users');
           await usersService.remove(null);
@@ -140,7 +137,8 @@ const usersId = [
           app = feathers();
           app.configure(makeUsersService({ id: idType, paginate: pagination === 'paginated' }));
           app.configure(authLocalMgnt({
-            notifier: spyNotifier.callWith
+            notifier: spyNotifier.callWith,
+            bcryptCompare,
           }));
           app.setup();
           authLocalMgntService = app.service('authManagement');
@@ -186,7 +184,7 @@ const usersId = [
 
             assert.strictEqual(user.isVerified, true, 'isVerified not false');
             assert.isString(user.verifyToken, 'verifyToken not String');
-            assert.equal(user.verifyToken.length, 30, 'verify token wrong length');
+            assert.isAtLeast(user.verifyToken.length, 30, 'verify token wrong length');
             assert.equal(user.verifyShortToken.length, 6, 'verify short token wrong length');
             assert.match(user.verifyShortToken, /^[0-9]+$/);
           } catch (err) {

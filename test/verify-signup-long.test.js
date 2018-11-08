@@ -32,7 +32,7 @@ const users_Id = [
 
 ['_id', 'id'].forEach(idType => {
   ['paginated', 'non-paginated'].forEach(pagination => {
-    describe(`verify-signup-long.js ${pagination} ${idType}`, function () {
+    describe(`verify-signup-long.test.js ${pagination} ${idType}`, function () {
       this.timeout(timeoutEachTest);
 
       describe('basic', () => {

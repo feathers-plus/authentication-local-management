@@ -5,7 +5,6 @@ const ensureObjPropsValid = require('./helpers/ensure-obj-props-valid');
 const getLongToken = require('./helpers/get-long-token');
 const getShortToken = require('./helpers/get-short-token');
 const getUserData = require('./helpers/get-user-data');
-const hashPassword = require('./helpers/hash-password');
 const notifier = require('./helpers/notifier');
 
 const debug = makeDebug('authLocalMgnt:sendResetPwd');
@@ -35,8 +34,8 @@ async function sendResetPwd (options, identifyUser, notifierOptions) {
 
   const user3 = await usersService.patch(user2[usersServiceIdName], {
     resetExpires: user2.resetExpires,
-    resetToken: await hashPassword(options.app, user2.resetToken),
-    resetShortToken: await hashPassword(options.app, user2.resetShortToken),
+    resetToken: user2.resetToken,
+    resetShortToken: user2.resetShortToken,
   });
 
   return options.sanitizeUserForClient(user3);

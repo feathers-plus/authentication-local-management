@@ -1,9 +1,7 @@
 
+const bcrypt = require('bcryptjs');
 const errors = require('@feathersjs/errors');
 const makeDebug = require('debug');
-
-const debug = makeDebug('authLocalMgnt:service');
-
 const checkUnique = require('./check-unique');
 const identityChange = require('./identity-change');
 const passwordChange = require('./password-change');
@@ -12,6 +10,8 @@ const sanitizeUserForClient = require('./helpers/sanitize-user-for-client');
 const sendResetPwd = require('./send-reset-pwd');
 const { resetPwdWithLongToken, resetPwdWithShortToken } = require('./reset-password');
 const { verifySignupWithLongToken, verifySignupWithShortToken } = require('./verify-signup');
+
+const debug = makeDebug('authLocalMgnt:service');
 
 const optionsDefault = {
   app: null, // value set during configuration
@@ -24,7 +24,8 @@ const optionsDefault = {
   resetDelay: 1000 * 60 * 60 * 2, // 2 hours
   delay: 1000 * 60 * 60 * 24 * 5, // 5 days
   identifyUserProps: ['email'],
-  sanitizeUserForClient
+  sanitizeUserForClient,
+  bcryptCompare: bcrypt.compare,
 };
 
 module.exports = authenticationLocalManagement;

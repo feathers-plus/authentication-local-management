@@ -5,7 +5,6 @@ const comparePasswords = require('./helpers/compare-passwords');
 const ensureObjPropsValid = require('./helpers/ensure-obj-props-valid');
 const ensureValuesAreStrings = require('./helpers/ensure-values-are-strings');
 const getUserData = require('./helpers/get-user-data');
-const hashPassword = require('./helpers/hash-password');
 const notifier = require('./helpers/notifier');
 
 const debug = makeDebug('authLocalMgnt:passwordChange');
@@ -24,16 +23,14 @@ async function passwordChange (options, identifyUser, oldPassword, password) {
   const user1 = getUserData(users);
 
   try {
-    await comparePasswords(oldPassword, user1.password, () => {});
+    await comparePasswords(oldPassword, user1.password, () => {}, options.bcryptCompare);
   } catch (err) {
     throw new errors.BadRequest('Current password is incorrect.',
       { errors: { oldPassword: 'Current password is incorrect.' } }
     );
   }
 
-  const user2 = await usersService.patch(user1[usersServiceIdName], {
-    password: await hashPassword(options.app, password)
-  });
+  const user2 = await usersService.patch(user1[usersServiceIdName], { password });
 
   const user3 = await notifier(options.notifier, 'passwordChange', user2);
   return options.sanitizeUserForClient(user3);

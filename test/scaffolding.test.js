@@ -65,7 +65,7 @@ function organization() {
   });
 }
 
-describe('scaffolding.js', () => {
+describe('scaffolding.test.js', () => {
   describe('can configure 1 service', () => {
     let app;
 
@@ -93,10 +93,12 @@ describe('scaffolding.js', () => {
       assert.property(options, 'notifier');
       delete options.app;
       delete options.notifier;
+      delete options.bcryptCompare;
 
       const expected = Object.assign({}, optionsDefault, userMgntOptions);
       delete expected.app;
       delete expected.notifier;
+      delete expected.bcryptCompare;
 
       assert.deepEqual(options, expected);
     });
@@ -141,10 +143,12 @@ describe('scaffolding.js', () => {
       assert.property(options, 'notifier');
       delete options.app;
       delete options.notifier;
+      delete options.bcryptCompare;
 
       const expected = Object.assign({}, optionsDefault, userMgntOptions);
       delete expected.app;
       delete expected.notifier;
+      delete expected.bcryptCompare;
 
       assert.deepEqual(options, expected);
 
@@ -154,10 +158,12 @@ describe('scaffolding.js', () => {
       assert.property(options1, 'notifier');
       delete options1.app;
       delete options1.notifier;
+      delete options1.bcryptCompare;
 
       const expected1 = Object.assign({}, optionsDefault, orgMgntOptions);
       delete expected1.app;
       delete expected1.notifier;
+      delete expected1.bcryptCompare;
 
       assert.deepEqual(options1, expected1);
     });
