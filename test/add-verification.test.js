@@ -23,6 +23,20 @@ describe('add-verification.test.js', function () {
         user: { email: 'b@b.com' }
       }
     };
+
+    contextArray = {
+      type: 'before',
+      method: 'create',
+      data: [{
+        email: 'a@a.com', password: '0000000000'
+      }, {
+        email: 'b@b.com', password: '1111111111'
+      }],
+      app,
+      params: {
+        user: { email: 'b@b.com' }
+      }
+    };
   });
 
   describe('basics', () => {
@@ -41,6 +55,28 @@ describe('add-verification.test.js', function () {
         assert.match(user.verifyShortToken, /^[0-9]+$/);
         aboutEqualDateTime(user.verifyExpires, makeDateTime());
         assert.deepEqual(user.verifyChanges, {}, 'verifyChanges not empty object');
+      } catch (err) {
+        console.log(err);
+        assert(false, 'unexpected error');
+      }
+    });
+
+    it('works with an array', async () => {
+      app.configure(authLocalMgnt());
+      app.setup();
+
+      try {
+        const ctx = await addVerification()(contextArray);
+
+        ctx.data.forEach(user => {
+          assert.strictEqual(user.isVerified, false, 'isVerified not false');
+          assert.isString(user.verifyToken, 'verifyToken not String');
+          assert.equal(user.verifyToken.length, 30, 'verify token wrong length');
+          assert.equal(user.verifyShortToken.length, 6, 'verify short token wrong length');
+          assert.match(user.verifyShortToken, /^[0-9]+$/);
+          aboutEqualDateTime(user.verifyExpires, makeDateTime());
+          assert.deepEqual(user.verifyChanges, {}, 'verifyChanges not empty object');
+        });
       } catch (err) {
         console.log(err);
         assert(false, 'unexpected error');

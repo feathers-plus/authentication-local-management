@@ -1,44 +1,39 @@
 
 const errors = require('@feathersjs/errors');
-const { checkContext } = require('feathers-hooks-common');
+const { checkContext, getItems, replaceItems } = require('feathers-hooks-common');
 const { getLongToken, getShortToken, ensureFieldHasChanged } = require('../helpers');
 
 module.exports = addVerification;
 
 function addVerification (path) {
-  return hook => {
-    checkContext(hook, 'before', ['create', 'patch', 'update']);
+  return async context => {
+    checkContext(context, 'before', ['create', 'patch', 'update']);
+    const items = getItems(context);
+    const recs = Array.isArray(items) ? items : [items];
 
-    return Promise.resolve()
-      .then(() => hook.app.service(path || 'authManagement').create({ action: 'options' }))
-      .then(options => Promise.all([
-        options,
-        getLongToken(options.longTokenLen),
-        getShortToken(options.shortTokenLen, options.shortTokenDigits)
-      ]))
-      .then(([options, longToken, shortToken]) => {
-        // We do NOT add verification fields if the 3 following conditions are fulfilled:
-        // - hook is PATCH or PUT
-        // - user is authenticated
-        // - user's identifyUserProps fields did not change
-        if (
-          (hook.method === 'patch' || hook.method === 'update') &&
-          !!hook.params.user &&
-          !options.identifyUserProps.some(ensureFieldHasChanged(hook.data, hook.params.user))
-        ) {
-          return hook;
-        }
+    const options = await context.app.service(path || 'authManagement').create({ action: 'options' });
 
-        hook.data.isVerified = false;
-        hook.data.verifyExpires = Date.now() + options.delay;
-        hook.data.verifyToken = longToken;
-        hook.data.verifyShortToken = shortToken;
-        hook.data.verifyChanges = {};
+    for (let i = 0, ilen = recs.length; i < ilen; i++) {
+      const rec = recs[i];
 
-        return hook;
-      })
-      .catch(err => {
-        throw new errors.GeneralError(err);
-      });
+      // We do NOT add verification fields if the 3 following conditions are fulfilled:
+      // - context is PATCH or PUT
+      // - user is authenticated
+      // - user's identifyUserProps fields did not change
+      if (
+        !(context.method === 'patch' || context.method === 'update') ||
+        !context.params.user ||
+        options.identifyUserProps.some(ensureFieldHasChanged(rec, context.params.user))
+      ) {
+        rec.isVerified = false;
+        rec.verifyExpires = Date.now() + options.delay;
+        rec.verifyToken = await getLongToken(options.longTokenLen);
+        rec.verifyShortToken = await getShortToken(options.shortTokenLen, options.shortTokenDigits);
+        rec.verifyChanges = {};
+      }
+    }
+
+    replaceItems(context, items);
+    return context
   };
 }

@@ -106,3 +106,8 @@ There are options to
 - Customize the datetime conversion,
 - Customize the verifyChanges conversion,
 - Skip converting any of these fields.
+
+### addVerification
+
+It now works correctly when context.data is an array.
+
