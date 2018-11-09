@@ -34,11 +34,15 @@ app.service('users').hooks = {
 // ]
 ```
 
-(b) You can use alternate hash functions if you want to.
+(b) You can use an alternate hash function, if you want to, by using another hashing hook.
+
+You may want to do this if hashPassword function is too expensive in computation.
+You can the elapsed times for it, and some alternatives, by running misc/hash-timing-tests.js.
+Results vary from run to run as hashPassword randomly varies the number of hash cycles to impede timing attacks.  
 
 You would also have to pass a-l-m an option which compares a plain string to its encrypted value.
-See bcryptjs##compare for information of the function's signature.
-The repo uses the callback version of that function.
+See bcryptjs##compare for information on such a function's signature.
+The repo uses the callback version of that function. The default option is:
 ```js
 const bcrypt = require('bcryptjs');
 
