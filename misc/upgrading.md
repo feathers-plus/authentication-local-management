@@ -66,8 +66,43 @@ and implement your own `_comparePassword` (https://docs.feathersjs.com/api/authe
 
 ## Enhancements
 
-(1) The user-entity service name and the name of the password field in its records now defaults
+### Respects config/default.json and option.passwordField
+
+The user-entity service name and the name of the password field in its records now defaults
 config/default.json##authentication##local##entity and ##passwordField.
 These can be overridden with the a-l-m options service and passwordField.
 
 The signature of options.sanitizeUserForClient is now (user, passwordField) instead of (user).
+
+### Coerce fields for Sequelize and Knex
+
+The second most common issue raised with f-a-m was how to use it with Sequelize/Knex.
+f-a-m expected the user-entity model to be in a JS-friendly format,
+and the dev was expected to use hooks to reformat that to the Sequelize/Knex model.
+
+The conversionSql hook has been introduced. Its used on the user-entity as follows:
+```js
+module.exports = {
+  before: {
+    all: conversionSql(),
+  },
+  after: {
+    all: conversionSql(),
+  },
+};
+```
+
+By default it converts
+```txt
+ Field name         Internal            Sequelize & Knex
+-----------         --------            ----------------
+ isVerified         Boolean             INTEGER
+ verifyExpires      Date.now()          BIGINT 
+ verifyChanges      Object              STRING, JSON.stringify
+ resetExpires       Date.now()          BIGINT
+```
+
+There are options to
+- Customize the datetime conversion,
+- Customize the verifyChanges conversion,
+- Skip converting any of these fields.

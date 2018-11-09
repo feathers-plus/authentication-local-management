@@ -138,7 +138,7 @@ The service creates and maintains the following properties in the `user` item:
 - verifyToken:      The 30-char token generated for email addr verification (string)
 - verifyShortToken: The 6-digit token generated for cellphone addr verification (string)
 - verifyExpires:    When the email addr token expire (Date)
-- verifyChanges     New values to apply on verification to some identifyUserProps (string array)
+- verifyChanges     New values to apply on verification to some identifyUserProps (key value object)
 - resetToken:       The 30-char token generated for forgotten password reset (string)
 - resetShortToken:  The 6-digit token generated for forgotten password reset (string)
 - resetExpires:     When the forgotten password token expire (Date)
