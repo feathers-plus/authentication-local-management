@@ -10,6 +10,7 @@ const optionsDefault = {
   path: 'authManagement',
   notifier: () => Promise.resolve(),
   longTokenLen: 15, // token's length will be twice this
+  passwordField: 'password',
   shortTokenLen: 6,
   shortTokenDigits: true,
   resetDelay: 1000 * 60 * 60 * 2, // 2 hours

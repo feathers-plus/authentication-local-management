@@ -6,8 +6,8 @@ const debug = makeDebug('authLocalMgnt:notifier');
 
 module.exports = notifier;
 
-async function notifier (optionsNotifier, type, user, notifierOptions) {
+async function notifier (options, type, user, notifierOptions) {
   debug('notifier', type);
-  await optionsNotifier(type, sanitizeUserForNotifier(user), notifierOptions || {});
+  await options.notifier(type, sanitizeUserForNotifier(user, options.passwordField), notifierOptions || {});
   return user;
 }

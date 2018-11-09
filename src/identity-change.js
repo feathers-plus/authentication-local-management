@@ -25,7 +25,7 @@ async function identityChange (options, identifyUser, password, changesIdentifyU
   const user1 = getUserData(users);
 
   try {
-    await comparePasswords(password, user1.password, () => {}, options.bcryptCompare);
+    await comparePasswords(password, user1[options.passwordField], () => {}, options.bcryptCompare);
   } catch (err) {
     throw new errors.BadRequest('Password is incorrect.',
       { errors: { password: 'Password is incorrect.', $className: 'badParams' } }
@@ -39,6 +39,6 @@ async function identityChange (options, identifyUser, password, changesIdentifyU
     verifyChanges: changesIdentifyUser
   });
 
-  const user3 = await notifier(options.notifier, 'identityChange', user2, null);
-  return options.sanitizeUserForClient(user3);
+  const user3 = await notifier(options, 'identityChange', user2, null);
+  return options.sanitizeUserForClient(user3, options.passwordField);
 }

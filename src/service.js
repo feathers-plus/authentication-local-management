@@ -14,11 +14,12 @@ const { verifySignupWithLongToken, verifySignupWithShortToken } = require('./ver
 const debug = makeDebug('authLocalMgnt:service');
 
 const optionsDefault = {
-  app: null, // value set during configuration
-  service: '/users', // need exactly this for test suite
+  app: null, // Value set during configuration.
+  service: '/users', // Need exactly this for test suite. Overridden by config/default.json.
   path: 'authManagement',
+  passwordField: 'password', //  Overridden by config/default.json.
   notifier: async () => {},
-  longTokenLen: 15, // token's length will be twice this
+  longTokenLen: 15, // Token's length will be twice this by default.
   shortTokenLen: 6,
   shortTokenDigits: true,
   resetDelay: 1000 * 60 * 60 * 2, // 2 hours
@@ -34,7 +35,18 @@ function authenticationLocalManagement(options1 = {}) {
   debug('service being configured.');
 
   return function () {
-    const options = Object.assign({}, optionsDefault, options1, { app: this });
+    const app = this;
+
+    // Get defaults from config/default.json
+    const authOptions = app.get('authentication') || {};
+    if (authOptions.entity) {
+      optionsDefault.service = authOptions.entity;
+    }
+    if (authOptions.passwordField) {
+      optionsDefault.passwordField = authOptions.passwordField;
+    }
+
+    const options = Object.assign({}, optionsDefault, options1, { app });
     options.app.use(options.path, authLocalMgntMethods(options));
   };
 }

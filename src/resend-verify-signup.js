@@ -29,6 +29,6 @@ module.exports = async function resendVerifySignup (options, identifyUser, notif
     verifyShortToken: await getShortToken(options.shortTokenLen, options.shortTokenDigits),
   });
 
-  const user3 = await notifier(options.notifier, 'resendVerifySignup', user2, notifierOptions);
-  return options.sanitizeUserForClient(user3);
+  const user3 = await notifier(options, 'resendVerifySignup', user2, notifierOptions);
+  return options.sanitizeUserForClient(user3, options.passwordField);
 };

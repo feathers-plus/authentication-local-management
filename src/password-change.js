@@ -23,15 +23,15 @@ async function passwordChange (options, identifyUser, oldPassword, password) {
   const user1 = getUserData(users);
 
   try {
-    await comparePasswords(oldPassword, user1.password, () => {}, options.bcryptCompare);
+    await comparePasswords(oldPassword, user1[options.passwordField], () => {}, options.bcryptCompare);
   } catch (err) {
     throw new errors.BadRequest('Current password is incorrect.',
       { errors: { oldPassword: 'Current password is incorrect.' } }
     );
   }
 
-  const user2 = await usersService.patch(user1[usersServiceIdName], { password });
+  const user2 = await usersService.patch(user1[usersServiceIdName], { [options.passwordField]: password });
 
-  const user3 = await notifier(options.notifier, 'passwordChange', user2);
-  return options.sanitizeUserForClient(user3);
+  const user3 = await notifier(options, 'passwordChange', user2);
+  return options.sanitizeUserForClient(user3, options.passwordField);
 }

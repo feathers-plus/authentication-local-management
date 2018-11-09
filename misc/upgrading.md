@@ -1,5 +1,7 @@
 # upgrading feathers-authentication-management (a.k.a. f-a-m) to authentication-local-management (a.k.a. a-l-m)
 
+## Breaking changes
+
 ### Encryption of password and tokens
 
 f-a-m internally encrypted the values for password, verifyToken, resetToken and resetShortToken.
@@ -61,3 +63,11 @@ It’s an option now (https://github.com/feathersjs/feathers/blob/master/package
 Hasn’t been added to the verifier yet unfortunately so you have to extend it
 and implement your own `_comparePassword` (https://docs.feathersjs.com/api/authentication/local.html#verifier)
 ```
+
+## Enhancements
+
+(1) The user-entity service name and the name of the password field in its records now defaults
+config/default.json##authentication##local##entity and ##passwordField.
+These can be overridden with the a-l-m options service and passwordField.
+
+The signature of options.sanitizeUserForClient is now (user, passwordField) instead of (user).

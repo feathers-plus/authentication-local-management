@@ -43,8 +43,8 @@ async function verifySignup (options, query, tokens) {
   }
 
   const user2 = await eraseVerifyProps(user1, user1.verifyExpires > Date.now(), user1.verifyChanges || {});
-  const user3 = await notifier(options.notifier, 'verifySignup', user2)
-  return options.sanitizeUserForClient(user3);
+  const user3 = await notifier(options, 'verifySignup', user2)
+  return options.sanitizeUserForClient(user3, options.passwordField);
 
   async function eraseVerifyProps (user, isVerified, verifyChanges) {
     const patchToUser = Object.assign({}, verifyChanges || {}, {

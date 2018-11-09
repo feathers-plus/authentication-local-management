@@ -72,12 +72,12 @@ async function resetPassword (options, query, tokens, password) {
   }
 
   const user2 = await usersService.patch(user1[usersServiceIdName], {
-    password,
+    [options.passwordField]: password,
     resetToken: null,
     resetShortToken: null,
     resetExpires: null
   });
 
-  const user3 = await notifier(options.notifier, 'resetPwd', user2);
-  return options.sanitizeUserForClient(user3);
+  const user3 = await notifier(options, 'resetPwd', user2);
+  return options.sanitizeUserForClient(user3, options.passwordField);
 }

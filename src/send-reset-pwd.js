@@ -30,7 +30,7 @@ async function sendResetPwd (options, identifyUser, notifierOptions) {
     resetShortToken: await getShortToken(options.shortTokenLen, options.shortTokenDigits),
   });
 
-  notifier(options.notifier, 'sendResetPwd', user2, notifierOptions)
+  notifier(options, 'sendResetPwd', user2, notifierOptions)
 
   const user3 = await usersService.patch(user2[usersServiceIdName], {
     resetExpires: user2.resetExpires,
@@ -38,5 +38,5 @@ async function sendResetPwd (options, identifyUser, notifierOptions) {
     resetShortToken: user2.resetShortToken,
   });
 
-  return options.sanitizeUserForClient(user3);
+  return options.sanitizeUserForClient(user3, options.passwordField);
 }
