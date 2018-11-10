@@ -66,6 +66,11 @@ and implement your own `_comparePassword` (https://docs.feathersjs.com/api/authe
 
 ## Enhancements
 
+### async/await
+
+async/await is used throughout the repo. The repo interfaces may be called either with await,
+or by using Promises. So the interfaces themselves are backwards compatible.
+
 ### Respects config/default.json and option.passwordField
 
 The user-entity service name and the name of the password field in its records now defaults
@@ -80,8 +85,12 @@ The second most common issue raised with f-a-m was how to use it with Sequelize/
 f-a-m expected the user-entity model to be in a JS-friendly format,
 and the dev was expected to use hooks to reformat that to the Sequelize/Knex model.
 
-The conversionSql hook has been introduced. Its used on the user-entity as follows:
+The conversionSql hook has been introduced as a convenience.
+It converts the isVerified, verifiedExpires, verifyChanges, resetExpires fields created by this repo.
+Its used on the user-entity as follows:
 ```js
+const { conversionSql } = require('authentication-local-management').hooks;
+
 module.exports = {
   before: {
     all: conversionSql(),
@@ -97,15 +106,29 @@ By default it converts
  Field name         Internal            Sequelize & Knex
 -----------         --------            ----------------
  isVerified         Boolean             INTEGER
- verifyExpires      Date.now()          BIGINT 
+ verifyExpires      Date.now()          DATE (*)
  verifyChanges      Object              STRING, JSON.stringify
- resetExpires       Date.now()          BIGINT
+ resetExpires       Date.now()          DATE (*)
 ```
+
+(*) The hook passes the 2 datetimes to the adapter as Date.now() when used as a before hook.
+The adapter converts them to the DB format.
+The hook itself converts the datetimes back to Date.now() when run as an after hook.
 
 There are options to
 - Customize the datetime conversion,
 - Customize the verifyChanges conversion,
 - Skip converting any of these fields.
+
+The test/sequelize.test.js module uses the feathers-sequelize adapter with an sqlite3 table created with
+```txt
+authentication-local-management$ sqlite3 ./testdata/users.sqlite3
+SQLite version 3.19.3 2017-06-08 14:26:16
+Enter ".help" for usage hints.
+sqlite> .schema
+sqlite> CREATE TABLE 'Users' ('id' INTEGER PRIMARY KEY AUTOINCREMENT, 'email' VARCHAR(60), 'password' VARCHAR(60), 'isVerified' INTEGER, 'verifyExpires' DATETIME, 'verifyToken' VARCHAR(60), 'verifyShortToken' VARCHAR(8), 'verifyChanges' VARCHAR(255), 'resetExpires' INTEGER, 'resetToken' VARCHAR(60), 'resetShortToken' VARCHAR(8));
+sqlite> 
+```
 
 ### Customization of service calls
 
@@ -114,7 +137,7 @@ A good example is provided in https://github.com/feathers-plus/feathers-authenti
 where the calls need to be customized to identify a set of calls for transaction roll back.
 
 You can customize every call in the repo using the new options.customizeCalls.
-Its defaults to
+It defaults to
 ```js
 {
   checkUnique: {
@@ -167,7 +190,7 @@ Its defaults to
 You can check the src/ modules for where these are called.
 
 You can provide an options.customizeCalls object when initializing the a-l-m.
-Your functions will be *merged* with the defaulkts
+Your functions will be *merged* with the defaults, so you only need specify the ones which changed.
 
 
 ### addVerification
