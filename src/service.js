@@ -2,6 +2,7 @@
 const bcrypt = require('bcryptjs');
 const errors = require('@feathersjs/errors');
 const makeDebug = require('debug');
+const merge = require('lodash.merge');
 const checkUnique = require('./check-unique');
 const identityChange = require('./identity-change');
 const passwordChange = require('./password-change');
@@ -27,6 +28,64 @@ const optionsDefault = {
   identifyUserProps: ['email'],
   sanitizeUserForClient,
   bcryptCompare: bcrypt.compare,
+  customizeCalls: null, // Value set during configuration.
+};
+
+/* Call options.customizeCalls using
+const users = await options.customizeCalls.identityChange
+  .find(usersService, { query: identifyUser });
+
+const user2 = await options.customizeCalls.identityChange
+  .patch(usersService, user1[usersServiceIdName], {
+
+});
+*/
+
+const  optionsCustomizeCalls = {
+  checkUnique: {
+    find: async (usersService, params = {}) =>
+      await usersService.find(params),
+  },
+  identityChange: {
+    find: async (usersService, params = {}) =>
+      await usersService.find(params),
+    patch: async (usersService, id, data, params = {}) =>
+      await usersService.patch(id, data, params),
+  },
+  passwordChange: {
+    find: async (usersService, params = {}) =>
+      await usersService.find(params),
+    patch: async (usersService, id, data, params = {}) =>
+      await usersService.patch(id, data, params),
+  },
+  resendVerifySignup: {
+    find: async (usersService, params = {}) =>
+      await usersService.find(params),
+    patch: async (usersService, id, data, params = {}) =>
+      await usersService.patch(id, data, params),
+  },
+  resetPassword: {
+    resetTokenGet: async (usersService, id, params) =>
+      await usersService.get(id, params),
+    resetShortTokenFind: async (usersService, params = {}) =>
+      await usersService.find(params),
+    badTokenpatch: async (usersService, id, data, params = {}) =>
+      await usersService.patch(id, data, params),
+    patch: async (usersService, id, data, params = {}) =>
+      await usersService.patch(id, data, params),
+  },
+  sendResetPwd: {
+    find: async (usersService, params = {}) =>
+      await usersService.find(params),
+    patch: async (usersService, id, data, params = {}) =>
+      await usersService.patch(id, data, params),
+  },
+  verifySignup: {
+    find: async (usersService, params = {}) =>
+      await usersService.find(params),
+    patch: async (usersService, id, data, params = {}) =>
+      await usersService.patch(id, data, params),
+  },
 };
 
 module.exports = authenticationLocalManagement;
@@ -47,6 +106,8 @@ function authenticationLocalManagement(options1 = {}) {
     }
 
     const options = Object.assign({}, optionsDefault, options1, { app });
+    options.customizeCalls = merge({}, optionsCustomizeCalls, options1.customizeCalls || {});
+
     options.app.use(options.path, authLocalMgntMethods(options));
   };
 }

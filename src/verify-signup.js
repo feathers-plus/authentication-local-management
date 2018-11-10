@@ -31,7 +31,8 @@ async function verifySignup (options, query, tokens) {
   const usersService = options.app.service(options.service);
   const usersServiceIdName = usersService.id;
 
-  const users = await usersService.find({ query });
+  const users = await options.customizeCalls.verifySignup
+    .find(usersService, { query });
   const user1 = getUserData(users, ['isNotVerifiedOrHasVerifyChanges', 'verifyNotExpired']);
 
   if (!Object.keys(tokens).every(key => tokens[key] === user1[key])) {
@@ -55,6 +56,7 @@ async function verifySignup (options, query, tokens) {
       verifyChanges: {}
     });
 
-    return await usersService.patch(user[usersServiceIdName], patchToUser, {});
+    return await options.customizeCalls.verifySignup
+      .patch(usersService, user[usersServiceIdName], patchToUser);
   }
 }

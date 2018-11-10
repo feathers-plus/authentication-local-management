@@ -37,9 +37,11 @@ async function resetPassword (options, query, tokens, password) {
 
   if (tokens.resetToken) {
     let id = deconstructId(tokens.resetToken);
-    users = await usersService.get(id);
+    users = await options.customizeCalls.resetPassword
+      .resetTokenGet(usersService, id);
   } else if (tokens.resetShortToken) {
-    users = await usersService.find({ query });
+    users = await options.customizeCalls.resetPassword
+      .resetShortTokenFind(usersService, { query });
   } else {
     throw new errors.BadRequest('resetToken and resetShortToken are missing. (authLocalMgnt)',
       { errors: { $className: 'missingToken' } }
@@ -60,23 +62,25 @@ async function resetPassword (options, query, tokens, password) {
   try {
     await Promise.all(promises);
   } catch (err) {
-    await usersService.patch(user1[usersServiceIdName], {
-      resetToken: null,
-      resetShortToken: null,
-      resetExpires: null
-    });
+    await options.customizeCalls.resetPassword
+      .badTokenpatch(usersService, user1[usersServiceIdName], {
+        resetToken: null,
+        resetShortToken: null,
+        resetExpires: null
+      });
 
     new errors.BadRequest('Invalid token. Get for a new one. (authLocalMgnt)',
       { errors: { $className: 'invalidToken' } }
     );
   }
 
-  const user2 = await usersService.patch(user1[usersServiceIdName], {
-    [options.passwordField]: password,
-    resetToken: null,
-    resetShortToken: null,
-    resetExpires: null
-  });
+  const user2 = await options.customizeCalls.resetPassword
+    .patch(usersService, user1[usersServiceIdName], {
+      [options.passwordField]: password,
+      resetToken: null,
+      resetShortToken: null,
+      resetExpires: null
+    });
 
   const user3 = await notifier(options, 'resetPwd', user2);
   return options.sanitizeUserForClient(user3, options.passwordField);

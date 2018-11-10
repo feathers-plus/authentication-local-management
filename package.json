@@ -54,7 +54,8 @@
     "@feathersjs/errors": "^3.3.4",
     "bcryptjs": "^2.3.0",
     "debug": "^3.2.6",
-    "feathers-hooks-common": "^4.17.14"
+    "feathers-hooks-common": "^4.17.14",
+    "lodash.merge": "^4.6.1"
   },
   "devDependencies": {
     "@feathersjs/feathers": "^3.2.3",

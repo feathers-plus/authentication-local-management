@@ -19,7 +19,8 @@ async function passwordChange (options, identifyUser, oldPassword, password) {
   ensureValuesAreStrings(oldPassword, password);
   ensureObjPropsValid(identifyUser, options.identifyUserProps);
 
-  const users = await usersService.find({ query: identifyUser });
+  const users = await options.customizeCalls.passwordChange
+    .find(usersService, { query: identifyUser });
   const user1 = getUserData(users);
 
   try {
@@ -30,7 +31,8 @@ async function passwordChange (options, identifyUser, oldPassword, password) {
     );
   }
 
-  const user2 = await usersService.patch(user1[usersServiceIdName], { [options.passwordField]: password });
+  const user2 = await options.customizeCalls.passwordChange
+    .patch(usersService, user1[usersServiceIdName], { [options.passwordField]: password });
 
   const user3 = await notifier(options, 'passwordChange', user2);
   return options.sanitizeUserForClient(user3, options.passwordField);

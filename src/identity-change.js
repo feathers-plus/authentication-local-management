@@ -21,7 +21,8 @@ async function identityChange (options, identifyUser, password, changesIdentifyU
   ensureObjPropsValid(identifyUser, options.identifyUserProps);
   ensureObjPropsValid(changesIdentifyUser, options.identifyUserProps);
 
-  const users = await usersService.find({ query: identifyUser });
+  const users = await options.customizeCalls.identityChange
+    .find(usersService, { query: identifyUser });
   const user1 = getUserData(users);
 
   try {
@@ -32,12 +33,13 @@ async function identityChange (options, identifyUser, password, changesIdentifyU
     );
   }
 
-  const user2 = await usersService.patch(user1[usersServiceIdName], {
-    verifyExpires: Date.now() + options.delay,
-    verifyToken: await getLongToken(options.longTokenLen),
-    verifyShortToken: await getShortToken(options.shortTokenLen, options.shortTokenDigits),
-    verifyChanges: changesIdentifyUser
-  });
+  const user2 = await options.customizeCalls.identityChange
+    .patch(usersService, user1[usersServiceIdName], {
+      verifyExpires: Date.now() + options.delay,
+      verifyToken: await getLongToken(options.longTokenLen),
+      verifyShortToken: await getShortToken(options.shortTokenLen, options.shortTokenDigits),
+      verifyChanges: changesIdentifyUser
+    });
 
   const user3 = await notifier(options, 'identityChange', user2, null);
   return options.sanitizeUserForClient(user3, options.passwordField);

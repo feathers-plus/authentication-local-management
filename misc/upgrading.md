@@ -107,6 +107,69 @@ There are options to
 - Customize the verifyChanges conversion,
 - Skip converting any of these fields.
 
+### Customization of service calls
+
+People inevitably find valid reasons for wanting to  customize the service calls being made by a repo.
+A good example is provided in https://github.com/feathers-plus/feathers-authentication-management/issues/107
+where the calls need to be customized to identify a set of calls for transaction roll back.
+
+You can customize every call in the repo using the new options.customizeCalls.
+Its defaults to
+```js
+{
+  checkUnique: {
+    find: async (usersService, params = {}) =>
+      await usersService.find(params),
+  },
+  identityChange: {
+    find: async (usersService, params = {}) =>
+      await usersService.find(params),
+    patch: async (usersService, id, data, params = {}) =>
+      await usersService.patch(id, data, params),
+  },
+  passwordChange: {
+    find: async (usersService, params = {}) =>
+      await usersService.find(params),
+    patch: async (usersService, id, data, params = {}) =>
+      await usersService.patch(id, data, params),
+  },
+  resendVerifySignup: {
+    find: async (usersService, params = {}) =>
+      await usersService.find(params),
+    patch: async (usersService, id, data, params = {}) =>
+      await usersService.patch(id, data, params),
+  },
+  resetPassword: {
+    resetTokenGet: async (usersService, id, params) =>
+      await usersService.get(id, params),
+    resetShortTokenFind: async (usersService, params = {}) =>
+      await usersService.find(params),
+    badTokenpatch: async (usersService, id, data, params = {}) =>
+      await usersService.patch(id, data, params),
+    patch: async (usersService, id, data, params = {}) =>
+      await usersService.patch(id, data, params),
+  },
+  sendResetPwd: {
+    find: async (usersService, params = {}) =>
+      await usersService.find(params),
+    patch: async (usersService, id, data, params = {}) =>
+      await usersService.patch(id, data, params),
+  },
+  verifySignup: {
+    find: async (usersService, params = {}) =>
+      await usersService.find(params),
+    patch: async (usersService, id, data, params = {}) =>
+      await usersService.patch(id, data, params),
+  },
+};
+```
+
+You can check the src/ modules for where these are called.
+
+You can provide an options.customizeCalls object when initializing the a-l-m.
+Your functions will be *merged* with the defaulkts
+
+
 ### addVerification
 
 It now works correctly when context.data is an array.

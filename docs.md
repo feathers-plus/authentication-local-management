@@ -177,8 +177,12 @@ The service may be called on the client using
 Method calls return a Promise.
 
 ```javascript
+// These two lines are needed if you are calling the functions on the server.
+// They are not needed when calling making the calls on the client.
 import authManagementService from 'feathers-authentication-management';
-app.configure(authManagementService(options))
+app.configure(authManagementService(options));
+
+
 const authManagement = app.service('authManagement');
 
 // check props are unique in the users items
