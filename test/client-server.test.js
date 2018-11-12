@@ -5,7 +5,7 @@ const feathers = require('@feathersjs/feathers');
 const feathersMemory = require('feathers-memory');
 const authLocalMgnt = require('../src/index');
 const SpyOn = require('./helpers/basic-spy');
-const { hashPasswordAndTokens, bcryptCompare,  bcryptCompareSync } = require('./helpers/hash-password-and-tokens-fake');
+const hashPasswordAndTokens = require('../src/hooks/hash-password-and-tokens');
 const { timeoutEachTest } = require('./helpers/config');
 
 const express = require('@feathersjs/express');
@@ -25,8 +25,8 @@ const { debug } = require('feathers-hooks-common');
 
 const delayAfterServerOnce = 500;
 const delayAfterServerClose = 500;
-const timeoutForStartingServerAndClient = 30000;
-const timeoutForClosingingServerAndClient = 30000;
+const timeoutTotal = 60000;
+const timeoutSocketio = 10000;
 
 const host = 'localhost';
 const port = 3030;
@@ -34,7 +34,7 @@ const email = 'login@example.com';
 const password = 'login';
 
 const fakeData = [
-  { id: 0, email, plainPassword: password, password, plainNewPassword: `00${password}00` },
+  { id: 1, email, plainPassword: password, password, plainNewPassword: `00${password}00` },
 ];
 
 let app;
@@ -43,44 +43,57 @@ let client;
 
 // Tests
 describe('client-server.test.js', function () {
-  this.timeout(timeoutEachTest);
+  this.timeout(timeoutTotal);
 
   describe('standard', () => {
-    before(async () => {
-      this.timeout(timeoutForStartingServerAndClient);
+    before(async function () {
+      this.timeout(timeoutTotal);
 
-      app = await configServer();
+      app = await configServer(port);
       console.log('    ... server configured.');
 
-      client = await configClient(host, port, email, password);
+      // Seed database once to save hashing time
+      const usersService = app.service('users');
+      await usersService.remove(null);
+      const db = await usersService.create(clone(fakeData));
+      console.log('    ... database seeded with:');
+      console.log(db);
+
+      client = await configClient(host, port, email, password, timeoutSocketio);
       console.log('    ... client configured');
     });
 
     beforeEach(async () => {
+      /*
       const usersService = app.service('users');
       await usersService.remove(null);
       const db = await usersService.create(clone(fakeData));
       console.log('    ... database seeded:');
       console.log(db);
+      */
     });
 
     after(function (done) {
-      this.timeout(timeoutForClosingingServerAndClient);
+      this.timeout(timeoutTotal);
 
       client.logout();
       server.close();
       setTimeout(() => done(), delayAfterServerClose);
     });
 
-    it('updates verified user', async () => {
+    it('updates verified user', async function () {
+      this.timeout(timeoutTotal);
+
       try {
         const id = 'id' in fakeData[0] ? fakeData[0].id : fakeData[0]._id;
 
         const userRec = await app.service('users').get(id);
         await app.service('users').patch(id, { isVerified: true });
 
-        const authLocalMgntService = app.service('authManagement');
-        result = await authLocalMgntService.create({
+        const authLocalMgntClient = client.service('authManagement');
+        //const authLocalMgntClient = app.service('authManagement');
+
+        const result = await authLocalMgntClient.create({
           action: 'passwordChange',
           value: {
             user: {
@@ -94,7 +107,7 @@ describe('client-server.test.js', function () {
         const user = await app.service('users').get(fakeData[0].id);
 
         assert.strictEqual(result.isVerified, true, 'isVerified not true');
-        assert.isOk(bcryptCompareSync(user.plainNewPassword, user.password), 'wrong password');
+        assert.isOk(bcrypt.compareSync(user.plainNewPassword, user.password), 'wrong password');
       } catch (err) {
         console.log(err);
         assert.strictEqual(err, null, 'err code set');
@@ -154,14 +167,14 @@ describe('client-server.test.js', function () {
 // Helpers
 
 // Similar to src/index.js
-async function configServer() {
-  const app = appJs();
-  server = app.listen(port);
+function configServer(port1) {
+  const app1 = appJs();
+  server = app1.listen(port1);
 
-  return await new Promise(resolve => {
-    server.once('listening', () => {
-      setTimeout(async () => {
-        resolve(app);
+  return new Promise(resolve => {
+    server.on('listening', () => {
+      setTimeout(() => {
+        resolve(app1);
       }, delayAfterServerOnce);
     });
   });
@@ -197,52 +210,57 @@ function configDefaultJsonAuthentication() {
 
 // Similar to src/app.js
 function appJs() {
-  app = express(feathers());
-  //app.configure(configuration());
-  app.configure(socketio());
-  authenticationJs(app);
+  const app1 = express(feathers());
+  // app1.configure(configuration());
+  // app1.configure(express.rest());
+  app1.configure(socketio());
 
-  app.configure(servicesIndexJs);
+  authenticationJs(app1);
+  servicesIndexJs(app1);
 
-  return app;
+  return app1;
 }
 
 // Similar to src/authentication.js
-function authenticationJs(app) {
-  app.configure(authentication(configDefaultJsonAuthentication()));
-  app.configure(jwt());
-  app.configure(local());
+function authenticationJs(app1) {
+  const config = configDefaultJsonAuthentication();
+
+  app1.configure(authentication(config));
+  app1.configure(jwt());
+  app1.configure(local());
 
   // The `authentication` service is used to create a JWT.
   // The before `create` hook registers strategies that can be used
   // to create a new valid JWT (e.g. local or oauth2)
-  console.log('authenticationJs', configDefaultJsonAuthentication().strategies);
+  console.log('authenticationJs', config.strategies);
 
-  app.service('authentication').hooks({
+  app1.service('authentication').hooks({
     before: {
       // comment out this line and test can login but but context.params.user === undefined
-      create: authentication.hooks.authenticate(configDefaultJsonAuthentication().strategies), // ['jwt', 'local']
+      create: authentication.hooks.authenticate(config.strategies), // ['jwt', 'local']
       remove: authentication.hooks.authenticate('jwt'),
     },
   });
 }
 
 // Similar to src/services/index.js
-function servicesIndexJs(app) {
-  app.configure(servicesUsersUsersServiceJs);
+function servicesIndexJs(app1) {
+  servicesUsersUsersServiceJs(app1);
 
-  app.configure(authLocalMgnt({
-    bcryptCompare,
+  app1.configure(authLocalMgnt({
+    // ... config
   }));
 
-  app.service('authManagement').hooks({
+  app1.service('authManagement').hooks({
     before: {
       create: [
-        authenticate('jwt'),
+        authenticate('jwt'), // ?? I assume this adds params.user ??????????????????????????????????
         context => {
-          console.log('.authManagement hook. create', context.data, Object.keys(context.params));
+          console.log(`.authManagement hook create. context.provider=${context.provider}`);
+          console.log(`.authManagement hook create. context.data=`, context.data);
+          console.log('.authManagement hook create. Object.keys(context.params)=', Object.keys(context.params));
           context.data.authUser = context.params.user;
-          console.log('.authManagement hook', context.data);
+          console.log('.authManagement hook create. new context.data=', context.data);
           return context;
         }
       ],
@@ -251,9 +269,9 @@ function servicesIndexJs(app) {
 }
 
 // Similar to src/services/users/users.service.js
-function servicesUsersUsersServiceJs(app) {
+function servicesUsersUsersServiceJs(app1) {
   // feathers-memory
-  let Model = modelsUsersModelJs(app);
+  let Model = modelsUsersModelJs(app1);
   let paginate = null;
 
   let options = {
@@ -261,13 +279,20 @@ function servicesUsersUsersServiceJs(app) {
     paginate,
   };
 
-  app.use('/users', feathersMemory(options));
+  app1.use('/users', feathersMemory(options));
 
-  app.service('users').hooks(servicesUsersUsersHooksJs(app));
+  const service = app1.service('users');
+  service.hooks(servicesUsersUsersHooksJs(app1));
+}
+
+// Similar to src/models/users.model.js
+function modelsUsersModelJs() {
+  // feathers-memory
+  return undefined;
 }
 
 // Similar to src/services/users/users.hooks.js
-function servicesUsersUsersHooksJs(app) {
+function servicesUsersUsersHooksJs(app1) {
   return {
     before: {
       //all: debug(),
@@ -284,15 +309,13 @@ function servicesUsersUsersHooksJs(app) {
   };
 }
 
-// Similar to src/models/users.model.js
-function modelsUsersModelJs() {
-  // feathers-memory
-  return null;
-}
-
-async function configClient(host, port, email1, password1) {
+async function configClient(host, port, email1, password1, timeoutSocketio) {
   const socket = io(`http://${host}:${port}`, {
-    transports: ['websocket'], forceNew: true, reconnection: false, extraHeaders: {}
+    transports: ['websocket'],
+    forceNew: true,
+    reconnection: false,
+    extraHeaders: {},
+    timeout: timeoutSocketio,
   });
   client = feathersClient();
 
