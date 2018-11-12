@@ -5,10 +5,10 @@ const { checkContext } = require('feathers-hooks-common');
 module.exports = isVerified;
 
 function isVerified () {
-  return hook => {
-    checkContext(hook, 'before');
+  return context => {
+    checkContext(context, 'before');
 
-    if (!hook.params.user || !hook.params.user.isVerified) {
+    if (context.params.provider && (!context.params.user || !context.params.user.isVerified)) {
       throw new errors.BadRequest('User\'s email is not yet verified.');
     }
   };

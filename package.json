@@ -50,7 +50,6 @@
     ]
   },
   "dependencies": {
-    "@feathersjs/authentication-local": "^1.2.7",
     "@feathersjs/errors": "^3.3.4",
     "bcryptjs": "^2.3.0",
     "debug": "^3.2.6",
@@ -58,7 +57,15 @@
     "lodash.merge": "^4.6.1"
   },
   "devDependencies": {
+    "@feathers-plus/test-utils": "^0.3.5",
+    "@feathersjs/authentication": "^2.1.13",
+    "@feathersjs/authentication-jwt": "^2.0.7",
+    "@feathersjs/authentication-local": "^1.2.7",
+    "@feathersjs/client": "^3.7.5",
+    "@feathersjs/configuration": "^2.0.4",
+    "@feathersjs/express": "^1.2.7",
     "@feathersjs/feathers": "^3.2.3",
+    "@feathersjs/socketio": "^3.2.7",
     "bcrypt": "^3.0.2",
     "chai": "^4.2.0",
     "feathers-memory": "^2.2.0",
@@ -67,6 +74,7 @@
     "mocha": "^3.3.0",
     "semistandard": "^11.0.0",
     "sequelize": "^4.41.1",
+    "socket.io-client": "^2.1.1",
     "sqlite3": "^4.0.4"
   }
 }

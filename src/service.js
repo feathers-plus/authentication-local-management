@@ -26,6 +26,7 @@ const optionsDefault = {
   resetDelay: 1000 * 60 * 60 * 2, // 2 hours
   delay: 1000 * 60 * 60 * 24 * 5, // 5 days
   identifyUserProps: ['email'],
+  ownAcctOnly: true,
   sanitizeUserForClient,
   bcryptCompare: bcrypt.compare,
   customizeCalls: null, // Value set during configuration.
@@ -98,11 +99,11 @@ function authenticationLocalManagement(options1 = {}) {
 
     // Get defaults from config/default.json
     const authOptions = app.get('authentication') || {};
-    if (authOptions.entity) {
-      optionsDefault.service = authOptions.entity;
+    if ((authOptions.local || {}).entity) {
+      optionsDefault.service = authOptions.local.entity;
     }
-    if (authOptions.passwordField) {
-      optionsDefault.passwordField = authOptions.passwordField;
+    if ((authOptions.local || {}).passwordField) {
+      optionsDefault.passwordField = authOptions.local.passwordField;
     }
 
     const options = Object.assign({}, optionsDefault, options1, { app });
@@ -117,73 +118,55 @@ function authLocalMgntMethods(options) {
     async create (data) {
       debug(`create called. action=${data.action}`);
 
-      switch (data.action) {
-        case 'checkUnique':
-          try {
-            return await checkUnique(options, data.value, data.ownId || null, data.meta || {});
-          } catch (err) {
-            return Promise.reject(err); // support both async and Promise interfaces
-          }
-        case 'resendVerifySignup':
-          try {
-            return await resendVerifySignup(options, data.value, data.notifierOptions);
-          } catch (err) {
-            return Promise.reject(err);
-          }
-        case 'verifySignupLong':
-          try {
-            return await verifySignupWithLongToken(options, data.value);
-          } catch (err) {
-            return Promise.reject(err);
-          }
-        case 'verifySignupShort':
-          try {
-            return await verifySignupWithShortToken(options, data.value.token, data.value.user);
-          } catch (err) {
-            return Promise.reject(err);
-          }
-        case 'sendResetPwd':
-          try {
-            return await sendResetPwd(options, data.value, data.notifierOptions);
-          } catch (err) {
-            return Promise.reject(err);
-          }
-        case 'resetPwdLong':
-          try {
-            return await resetPwdWithLongToken(options, data.value.token, data.value.password);
-          } catch (err) {
-            return Promise.reject(err);
-          }
-        case 'resetPwdShort':
-          try {
+      try {
+        switch (data.action) {
+          case 'checkUnique':
+            return await checkUnique(
+              options, data.value, data.ownId || null, data.meta || {}, data.authUser
+              );
+          case 'resendVerifySignup':
+            return await resendVerifySignup(
+              options, data.value, data.notifierOptions, data.authUser
+            );
+          case 'verifySignupLong':
+            return await verifySignupWithLongToken(
+              options, data.value, data.authUser
+            );
+          case 'verifySignupShort':
+            return await verifySignupWithShortToken(
+              options, data.value.token, data.value.user, data.authUser
+            );
+          case 'sendResetPwd':
+            return await sendResetPwd(
+              options, data.value, data.notifierOptions, data.authUser
+            );
+          case 'resetPwdLong':
+            return await resetPwdWithLongToken(
+              options, data.value.token, data.value.password, data.authUser
+            );
+          case 'resetPwdShort':
             return await resetPwdWithShortToken(
-              options, data.value.token, data.value.user, data.value.password
+              options, data.value.token, data.value.user, data.value.password, data.authUser
             );
-          } catch (err) {
-            return Promise.reject(err);
-          }
-        case 'passwordChange':
-          try {
+          case 'passwordChange':
             return await passwordChange(
-              options, data.value.user, data.value.oldPassword, data.value.password
+              options, data.value.user, data.value.oldPassword, data.value.password, data.authUser
             );
-          } catch (err) {
-            return Promise.reject(err);
-          }
-        case 'identityChange':
-          try {
+          case 'identityChange':
             return await identityChange(
-              options, data.value.user, data.value.password, data.value.changes
+              options, data.value.user, data.value.password, data.value.changes, data.authUser
             );
-          } catch (err) {
-            return Promise.reject(err);
-          }
-        case 'options':
-          return options;
-        default:
-          throw new errors.BadRequest(`Action '${data.action}' is invalid.`,
-            { errors: { $className: 'badParams' } }
-          );
+          case 'options':
+            return options;
+          default:
+            return Promise.reject(
+              new errors.BadRequest(`Action '${data.action}' is invalid.`,
+                { errors: { $className: 'badParams' } }
+              )
+            );
+        }
+      } catch (err) {
+        return Promise.reject(err); // support both async and Promise interfaces
       }
     }
   }

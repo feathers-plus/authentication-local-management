@@ -6,6 +6,7 @@ const deconstructId = require('./deconstruct-id');
 const ensureFieldHasChanged = require('./ensure-field-has-changed');
 const ensureObjPropsValid = require('./ensure-obj-props-valid');
 const ensureValuesAreStrings = require('./ensure-values-are-strings');
+const getId = require('./get-id');
 const getLongToken = require('./get-long-token');
 const getShortToken = require('./get-short-token');
 const getUserData = require('./get-user-data');
@@ -24,6 +25,7 @@ module.exports = {
   ensureFieldHasChanged,
   ensureObjPropsValid,
   ensureValuesAreStrings,
+  getId,
   getLongToken,
   getShortToken,
   getUserData,

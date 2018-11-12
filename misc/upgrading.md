@@ -64,6 +64,10 @@ Hasn’t been added to the verifier yet unfortunately so you have to extend it
 and implement your own `_comparePassword` (https://docs.feathersjs.com/api/authentication/local.html#verifier)
 ```
 
+### isVerified
+
+Does not check isVerified for calls made by the server.
+
 ## Enhancements
 
 ### async/await
@@ -197,3 +201,80 @@ Your functions will be *merged* with the defaults, so you only need specify the 
 
 It now works correctly when context.data is an array.
 
+## Documentation
+
+### Hooks for the user-entity
+
+a-l-m externalizes some of the required processing into hooks.
+This allows you to customize things like the hashing function.
+
+The user-entity hooks would typically be configured as shown below.
+Note the conversionSql hook is used only with user-entities using the Sequelize or Knex adapter.
+
+```js
+const { authenticate } = require('@feathersjs/authentication').hooks;
+const { hashPassword, protect } = require('@feathersjs/authentication-local').hooks;
+const { addVerification, conversionSql, hashPasswordAndTokens, isVerified, removeVerification } = 
+  require('@feathers-plus/authentication-local-management').hooks;
+
+let moduleExports = {
+  before: {
+    all: [
+      // Convert isVerified, verifyExpires, verifyChanges, resetExpires to SQL format.
+      conversionSql(),
+    ],
+    find: [
+      authenticate('jwt'),
+      // Check user has been verified i.e. isVerified === true.
+      isVerified(),
+    ],
+    get: [
+      authenticate('jwt'),
+      // Check user has been verified i.e. isVerified === true.
+      isVerified(),
+    ],
+    create: [
+      // Hash password, verifyToken, verifyShortToken, resetToken, resetShortToken. 
+      hashPasswordAndTokens(),
+      // Check user has been verified i.e. isVerified === true.
+      isVerified(),
+      // Add fields required by authentication-local-management:
+      // isVerified, verifyToken, verifyShortToken, verifyChanges,
+      // resetExpires, resetToken & resetShortToken.
+      addVerification(), 
+    ],
+    update: [
+      hashPassword(),
+      authenticate('jwt'),
+      // Check user has been verified i.e. isVerified === true.
+      isVerified(),
+    ],
+    patch: [
+      // Hash password, verifyToken, verifyShortToken, resetToken, resetShortToken.
+      hashPasswordAndTokens(),
+      authenticate('jwt'),
+      // Check user has been verified i.e. isVerified === true.
+      isVerified(),
+    ],
+    remove: [
+      authenticate('jwt'),
+      // Check user has been verified i.e. isVerified === true.
+      isVerified(),
+    ]
+  },
+
+  after: {
+    all: [
+      // Convert isVerified, verifyExpires, verifyChanges, resetExpires from SQL format.
+      conversionSql(),
+      protect('password') /* Must always be the last hook */ 
+   ],
+    find: [],
+    get: [],
+    create: [],
+    update: [],
+    patch: [],
+    remove: []
+  },
+};
+```
