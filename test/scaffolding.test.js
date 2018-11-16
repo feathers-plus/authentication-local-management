@@ -10,6 +10,7 @@ const optionsDefault = {
   path: 'authManagement',
   notifier: () => Promise.resolve(),
   longTokenLen: 15, // token's length will be twice this
+  ownAcctOnly: true,
   passwordField: 'password',
   shortTokenLen: 6,
   shortTokenDigits: true,
@@ -96,12 +97,14 @@ describe('scaffolding.test.js', () => {
       delete options.notifier;
       delete options.bcryptCompare;
       delete options.customizeCalls;
+      delete options.authManagementHooks;
 
       const expected = Object.assign({}, optionsDefault, userMgntOptions);
       delete expected.app;
       delete expected.notifier;
       delete expected.bcryptCompare;
       delete expected.customizeCalls;
+      delete expected.authManagementHooks;
 
       assert.deepEqual(options, expected);
     });
@@ -148,12 +151,14 @@ describe('scaffolding.test.js', () => {
       delete options.notifier;
       delete options.bcryptCompare;
       delete options.customizeCalls;
+      delete options.authManagementHooks;
 
       const expected = Object.assign({}, optionsDefault, userMgntOptions);
       delete expected.app;
       delete expected.notifier;
       delete expected.bcryptCompare;
       delete expected.customizeCalls;
+      delete expected.authManagementHooks;
 
       assert.deepEqual(options, expected);
 
@@ -165,12 +170,14 @@ describe('scaffolding.test.js', () => {
       delete options1.notifier;
       delete options1.bcryptCompare;
       delete options1.customizeCalls;
+      delete options1.authManagementHooks;
 
       const expected1 = Object.assign({}, optionsDefault, orgMgntOptions);
       delete expected1.app;
       delete expected1.notifier;
       delete expected1.bcryptCompare;
       delete expected1.customizeCalls;
+      delete expected1.authManagementHooks;
 
       assert.deepEqual(options1, expected1);
     });

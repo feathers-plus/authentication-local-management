@@ -1,5 +1,4 @@
 
-const errors = require('@feathersjs/errors');
 const { getItems, replaceItems } = require('feathers-hooks-common');
 
 const methodsWithData = ['create', 'update', 'patch'];
@@ -9,22 +8,22 @@ module.exports = conversionSql;
 function conversionSql (convertDatetime, convertVerifyChanges, ignore = []) {
   convertDatetime = convertDatetime || {
     before: dateNow => dateNow,
-    after: sqlDate => new Date(sqlDate).valueOf(),
+    after: sqlDate => new Date(sqlDate).valueOf()
   };
 
   convertVerifyChanges = convertVerifyChanges || {
     before: obj => JSON.stringify(obj),
-    after: str => JSON.parse(str),
+    after: str => JSON.parse(str)
   };
 
   const ifIsVerified = !ignore.includes('isVerified');
   const ifVerifyExpires = !ignore.includes('verifyExpires');
-  //const ifVerifyToken = !ignore.includes('verifyToken');
-  //const ifVerifyShortToken = !ignore.includes('verifyShortToken');
+  // const ifVerifyToken = !ignore.includes('verifyToken');
+  // const ifVerifyShortToken = !ignore.includes('verifyShortToken');
   const ifVerifyChanges = !ignore.includes('verifyChanges');
   const ifResetExpires = !ignore.includes('resetExpires');
-  //const ifResetToken = !ignore.includes('resetToken');
-  //const ifResetShortToken = !ignore.includes('resetShortToke.n');
+  // const ifResetToken = !ignore.includes('resetToken');
+  // const ifResetShortToken = !ignore.includes('resetShortToke.n');
 
   return context => {
     if (context.type === 'before' && !methodsWithData.includes(context.method)) return context;
@@ -38,13 +37,13 @@ function conversionSql (convertDatetime, convertVerifyChanges, ignore = []) {
           if (ifIsVerified && 'isVerified' in rec) {
             rec.isVerified = rec.isVerified ? 1 : 0;
           }
-          if (ifVerifyExpires && 'verifyExpires' in rec ) {
+          if (ifVerifyExpires && 'verifyExpires' in rec) {
             rec.verifyExpires = convertDatetime.before(rec.verifyExpires);
           }
           if (ifVerifyChanges && 'verifyChanges' in rec) {
             rec.verifyChanges = convertVerifyChanges.before(rec.verifyChanges);
           }
-          if (ifResetExpires && 'resetExpires' in rec ) {
+          if (ifResetExpires && 'resetExpires' in rec) {
             rec.resetExpires = convertDatetime.before(rec.resetExpires);
           }
         }
@@ -53,13 +52,13 @@ function conversionSql (convertDatetime, convertVerifyChanges, ignore = []) {
           if (ifIsVerified && 'isVerified' in rec) {
             rec.isVerified = !!rec.isVerified;
           }
-          if (ifVerifyExpires && 'verifyExpires' in rec ) {
+          if (ifVerifyExpires && 'verifyExpires' in rec) {
             rec.verifyExpires = convertDatetime.after(rec.verifyExpires);
           }
           if (ifVerifyChanges && 'verifyChanges' in rec) {
             rec.verifyChanges = convertVerifyChanges.after(rec.verifyChanges);
           }
-          if (ifResetExpires && 'resetExpires' in rec ) {
+          if (ifResetExpires && 'resetExpires' in rec) {
             rec.resetExpires = convertDatetime.after(rec.resetExpires);
           }
         }

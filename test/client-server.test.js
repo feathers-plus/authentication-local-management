@@ -16,7 +16,6 @@ const local = require('@feathersjs/authentication-local');
 const socketio = require('@feathersjs/socketio');
 const feathersClient = require('@feathersjs/client');
 const io = require('socket.io-client');
-const { join } = require('path');
 const { localStorage, readJsonFileSync } = require('@feathers-plus/test-utils');
 const { authenticate } = require('@feathersjs/authentication').hooks;
 const { hashPassword, protect } = require('@feathersjs/authentication-local').hooks;
@@ -26,15 +25,20 @@ const { debug } = require('feathers-hooks-common');
 const delayAfterServerOnce = 500;
 const delayAfterServerClose = 500;
 const timeoutTotal = 60000;
-const timeoutSocketio = 10000;
+const timeoutSocketio = 20000;
+const timeoutAuthenticationClient = 20000;
+const timeoutAuthLocalMgntClient = 20000;
 
 const host = 'localhost';
 const port = 3030;
 const email = 'login@example.com';
 const password = 'login';
+const email2 = 'login@example2.com';
+const password2 = 'login2';
 
 const fakeData = [
   { id: 1, email, plainPassword: password, password, plainNewPassword: `00${password}00` },
+  { id: 2, email: email2, plainPassword: password2, password: password2, plainNewPassword: `00${password2}00` },
 ];
 
 let app;
@@ -45,7 +49,7 @@ let client;
 describe('client-server.test.js', function () {
   this.timeout(timeoutTotal);
 
-  describe('standard', () => {
+  describe('authenticated user', () => {
     before(async function () {
       this.timeout(timeoutTotal);
 
@@ -56,22 +60,14 @@ describe('client-server.test.js', function () {
       const usersService = app.service('users');
       await usersService.remove(null);
       const db = await usersService.create(clone(fakeData));
-      console.log('    ... database seeded with:');
-      console.log(db);
+      console.log('    ... database seeded.');
 
-      client = await configClient(host, port, email, password, timeoutSocketio);
+      client = await configClient(host, port, email, password,
+        timeoutSocketio, timeoutAuthenticationClient, timeoutAuthLocalMgntClient);
       console.log('    ... client configured');
     });
 
-    beforeEach(async () => {
-      /*
-      const usersService = app.service('users');
-      await usersService.remove(null);
-      const db = await usersService.create(clone(fakeData));
-      console.log('    ... database seeded:');
-      console.log(db);
-      */
-    });
+    beforeEach(async () => {});
 
     after(function (done) {
       this.timeout(timeoutTotal);
@@ -81,7 +77,7 @@ describe('client-server.test.js', function () {
       setTimeout(() => done(), delayAfterServerClose);
     });
 
-    it('updates verified user', async function () {
+    it('authenticated user can mutation self', async function () {
       this.timeout(timeoutTotal);
 
       try {
@@ -91,7 +87,7 @@ describe('client-server.test.js', function () {
         await app.service('users').patch(id, { isVerified: true });
 
         const authLocalMgntClient = client.service('authManagement');
-        //const authLocalMgntClient = app.service('authManagement');
+        authLocalMgntClient.timeout = timeoutAuthLocalMgntClient; // 60000
 
         const result = await authLocalMgntClient.create({
           action: 'passwordChange',
@@ -110,57 +106,96 @@ describe('client-server.test.js', function () {
         assert.isOk(bcrypt.compareSync(user.plainNewPassword, user.password), 'wrong password');
       } catch (err) {
         console.log(err);
-        assert.strictEqual(err, null, 'err code set');
+        throw err
       }
     });
-/*
-    it('updates unverified user', async () => {
-      try {
-        const userRec = clone(users_Id[0]);
 
-        result = await authLocalMgntService.create({
+    it('authenticated user cannot mutation another user', async function () {
+      this.timeout(timeoutTotal);
+
+      try {
+        const id = 'id' in fakeData[1] ? fakeData[1].id : fakeData[1]._id;
+
+        const userRec = await app.service('users').get(id);
+        await app.service('users').patch(id, { isVerified: true });
+
+        const authLocalMgntClient = client.service('authManagement');
+        authLocalMgntClient.timeout = timeoutAuthLocalMgntClient; // 60000
+
+        const result = await authLocalMgntClient.create({
           action: 'passwordChange',
           value: {
             user: {
               email: userRec.email
             },
             oldPassword: userRec.plainPassword,
-            password: userRec.plainNewPassword
+            password: userRec.plainNewPassword,
           },
         });
-        const user = await usersService.get(result.id || result._id);
 
-        assert.strictEqual(result.isVerified, false, 'isVerified not false');
-        assert.isOk(bcryptCompareSync(user.plainNewPassword, user.password), `[0]`);
+        assert(false, 'Unexpected succeeded.');
       } catch (err) {
-        console.log(err);
-        assert.strictEqual(err, null, 'err code set');
+        assert.equal(err.errors.$className, 'not-own-acct');
       }
     });
+  });
 
-    it('error on wrong password', async () => {
+  describe('unauthenticated user', () => {
+    before(async function () {
+      this.timeout(timeoutTotal);
+
+      app = await configServer(port);
+      console.log('    ... server configured.');
+
+      // Seed database once to save hashing time
+      const usersService = app.service('users');
+      await usersService.remove(null);
+      const db = await usersService.create(clone(fakeData));
+      console.log('    ... database seeded.');
+
+      client = await configClient(host, port, email, password,
+        timeoutSocketio, timeoutAuthenticationClient, timeoutAuthLocalMgntClient);
+      console.log('    ... client configured');
+    });
+
+    beforeEach(async () => {});
+
+    after(function (done) {
+      this.timeout(timeoutTotal);
+
+      client.logout();
+      server.close();
+      setTimeout(() => done(), delayAfterServerClose);
+    });
+
+    it('cannot call authenticated route', async function () {
+      this.timeout(timeoutTotal);
+
       try {
-        const userRec = clone(users_Id[0]);
+        const id = 'id' in fakeData[1] ? fakeData[1].id : fakeData[1]._id;
 
-        result = await authLocalMgntService.create({
+        const userRec = await app.service('users').get(id);
+        await app.service('users').patch(id, { isVerified: true });
+
+        const authLocalMgntClient = client.service('authManagement');
+        authLocalMgntClient.timeout = timeoutAuthLocalMgntClient; // 60000
+
+        await authLocalMgntClient.create({
           action: 'passwordChange',
           value: {
             user: {
               email: userRec.email
             },
-            oldPassword: 'fdfgfghghj',
-            password: userRec.plainNewPassword
+            oldPassword: userRec.plainPassword,
+            password: userRec.plainNewPassword,
           },
         });
-        const user = await usersService.get(result.id || result._id);
 
-        assert(false, 'unexpected succeeded.');
+        assert(false, 'Unexpected succeeded.');
       } catch (err) {
-        assert.isString(err.message);
-        assert.isNotFalse(err.message);
+        assert.equal(err.errors.$className, 'not-own-acct');
       }
     });
-    */
   });
 });
 
@@ -189,7 +224,7 @@ function configDefaultJsonAuthentication() {
       "local"
     ],
     "path": "/authentication",
-    "service": "users",
+    "service": "users", // path of the users service
     "jwt": {
       "header": {
         "typ": "access"
@@ -201,7 +236,7 @@ function configDefaultJsonAuthentication() {
       "expiresIn": "10d"
     },
     "local": {
-      "entity": "users",
+      "entity": "user", // place authenticated user in context.params[entity]
       "usernameField": "email",
       "passwordField": "password"
     },
@@ -232,11 +267,9 @@ function authenticationJs(app1) {
   // The `authentication` service is used to create a JWT.
   // The before `create` hook registers strategies that can be used
   // to create a new valid JWT (e.g. local or oauth2)
-  console.log('authenticationJs', config.strategies);
-
   app1.service('authentication').hooks({
     before: {
-      // comment out this line and test can login but but context.params.user === undefined
+      // comment out this line and test can login but context.params.user === undefined
       create: authentication.hooks.authenticate(config.strategies), // ['jwt', 'local']
       remove: authentication.hooks.authenticate('jwt'),
     },
@@ -250,22 +283,6 @@ function servicesIndexJs(app1) {
   app1.configure(authLocalMgnt({
     // ... config
   }));
-
-  app1.service('authManagement').hooks({
-    before: {
-      create: [
-        authenticate('jwt'), // ?? I assume this adds params.user ??????????????????????????????????
-        context => {
-          console.log(`.authManagement hook create. context.provider=${context.provider}`);
-          console.log(`.authManagement hook create. context.data=`, context.data);
-          console.log('.authManagement hook create. Object.keys(context.params)=', Object.keys(context.params));
-          context.data.authUser = context.params.user;
-          console.log('.authManagement hook create. new context.data=', context.data);
-          return context;
-        }
-      ],
-    }
-  })
 }
 
 // Similar to src/services/users/users.service.js
@@ -309,37 +326,42 @@ function servicesUsersUsersHooksJs(app1) {
   };
 }
 
-async function configClient(host, port, email1, password1, timeoutSocketio) {
+async function configClient(host, port, email1, password1,
+  timeoutSocketio = 20000, timeoutAuthenticationClient = 20000, timeoutAuthLocalMgntClient = 20000
+) {
   const socket = io(`http://${host}:${port}`, {
     transports: ['websocket'],
     forceNew: true,
     reconnection: false,
     extraHeaders: {},
-    timeout: timeoutSocketio,
+    timeout: timeoutSocketio, // 60000
   });
   client = feathersClient();
 
   client.configure(feathersClient.socketio(socket));
   client.configure(feathersClient.authentication({
-    storage: localStorage
+    storage: localStorage,
+    timeout:  timeoutAuthenticationClient, // 60000
   }));
 
-  try {
-    await client.authenticate({
-      strategy: 'local',
-      email: email1,
-      password: password1,
-    });
-    console.log('    ... client authenticated');
-  } catch (err) {
-    console.log('    ... client could not authenticate.', err);
-    throw new Error(`Unable to authenticate: ${err.message}`);
+  if (email1) {
+    console.log('    ... authenticating client');
+
+    try {
+      await client.authenticate({
+        strategy: 'local',
+        email: email1,
+        password: password1,
+      });
+      console.log('    ... client authenticated');
+    } catch (err) {
+      console.log('    ... client could not authenticate.', err);
+      throw new Error(`Unable to authenticate: ${err.message}`);
+    }
   }
 
-  const usersService = client.service('users');
-  console.log(`    ... users service ${typeof usersService === 'object' ? '' : 'NOT '} found on client.`);
-  const authLocalMgntService = client.service('authManagement');
-  console.log(`    ... authManagement service ${typeof authLocalMgntService === 'object' ? '' : 'NOT '} found on client.`);
+  const authLocalMgntClient = client.service('authManagement');
+  authLocalMgntClient.timeout = timeoutAuthLocalMgntClient; // 60000
 
   return client;
 }

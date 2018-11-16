@@ -1,5 +1,4 @@
 
-const errors = require('@feathersjs/errors');
 const { checkContext, getItems, replaceItems } = require('feathers-hooks-common');
 const { getLongToken, getShortToken, ensureFieldHasChanged } = require('../helpers');
 
@@ -34,6 +33,6 @@ function addVerification (path) {
     }
 
     replaceItems(context, items);
-    return context
+    return context;
   };
 }

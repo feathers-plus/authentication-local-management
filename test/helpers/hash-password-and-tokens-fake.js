@@ -1,13 +1,11 @@
 
-const { hashPassword } = require('@feathersjs/authentication-local').hooks;
-
 module.exports = {
   hashPasswordAndTokens,
   bcryptCompare,
-  bcryptCompareSync,
+  bcryptCompareSync
 };
 
-function hashPasswordAndTokens(password, verifyToken, resetToken, resetShortToken) {
+function hashPasswordAndTokens (password, verifyToken, resetToken, resetShortToken) {
   return async (context) => {
     const data = Array.isArray(context.data) ? context.data : [context.data];
     const props = [
@@ -15,7 +13,7 @@ function hashPasswordAndTokens(password, verifyToken, resetToken, resetShortToke
       verifyToken || 'verifyToken',
       resetToken || 'resetToken',
       resetShortToken || 'resetShortToken'
-    ]
+    ];
 
     data.forEach(rec => {
       props.forEach(name => {
@@ -29,10 +27,10 @@ function hashPasswordAndTokens(password, verifyToken, resetToken, resetShortToke
   };
 }
 
-function bcryptCompare(plain, hashed, cb) {
+function bcryptCompare (plain, hashed, cb) {
   cb(null, hashed === `__${plain}`);
 }
 
-function bcryptCompareSync(plain, hashed) {
+function bcryptCompareSync (plain, hashed) {
   return hashed === `__${plain}`;
 }

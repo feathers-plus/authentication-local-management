@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const errors = require('@feathersjs/errors');
 const makeDebug = require('debug');
 const merge = require('lodash.merge');
+const { authenticate } = require('@feathersjs/authentication').hooks;
 const checkUnique = require('./check-unique');
 const identityChange = require('./identity-change');
 const passwordChange = require('./password-change');
@@ -13,6 +14,10 @@ const { resetPwdWithLongToken, resetPwdWithShortToken } = require('./reset-passw
 const { verifySignupWithLongToken, verifySignupWithShortToken } = require('./verify-signup');
 
 const debug = makeDebug('authLocalMgnt:service');
+const actionsNoAuth = [
+  'resendVerifySignup', 'verifySignupLong', 'verifySignupShort',
+  'sendResetPwd', 'resetPwdLong', 'resetPwdShort'
+];
 
 const optionsDefault = {
   app: null, // Value set during configuration.
@@ -29,8 +34,18 @@ const optionsDefault = {
   ownAcctOnly: true,
   sanitizeUserForClient,
   bcryptCompare: bcrypt.compare,
+  authManagementHooks: { before: { create: authManagementHook } },
   customizeCalls: null, // Value set during configuration.
 };
+
+async function authManagementHook(context) {
+  if (!context.data || !actionsNoAuth.includes(context.data.action)) {
+    context = await authenticate('jwt')(context);
+  }
+
+  context.data.authUser = context.params.user;
+  return context;
+}
 
 /* Call options.customizeCalls using
 const users = await options.customizeCalls.identityChange
@@ -99,17 +114,16 @@ function authenticationLocalManagement(options1 = {}) {
 
     // Get defaults from config/default.json
     const authOptions = app.get('authentication') || {};
-    if ((authOptions.local || {}).entity) {
-      optionsDefault.service = authOptions.local.entity;
-    }
-    if ((authOptions.local || {}).passwordField) {
-      optionsDefault.passwordField = authOptions.local.passwordField;
-    }
+    optionsDefault.service = authOptions.service || optionsDefault.service;
+    optionsDefault.passwordField =
+      (authOptions.local || {}).passwordField || optionsDefault.passwordField;
 
     const options = Object.assign({}, optionsDefault, options1, { app });
     options.customizeCalls = merge({}, optionsCustomizeCalls, options1.customizeCalls || {});
 
     options.app.use(options.path, authLocalMgntMethods(options));
+
+    app.service('authManagement').hooks(options.authManagementHooks)
   };
 }
 
@@ -118,6 +132,7 @@ function authLocalMgntMethods(options) {
     async create (data) {
       debug(`create called. action=${data.action}`);
 
+      // ******************** eliminate rec.id || rec._id checking in favor of getId() *************
       try {
         switch (data.action) {
           case 'checkUnique':

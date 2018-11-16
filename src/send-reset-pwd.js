@@ -11,7 +11,7 @@ const debug = makeDebug('authLocalMgnt:sendResetPwd');
 
 module.exports = sendResetPwd;
 
-async function sendResetPwd (options, identifyUser, notifierOptions) {
+async function sendResetPwd (options, identifyUser, notifierOptions, authUser) {
   debug('sendResetPwd');
   const usersService = options.app.service(options.service);
   const usersServiceIdName = usersService.id;

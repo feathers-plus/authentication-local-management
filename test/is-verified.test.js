@@ -12,24 +12,16 @@ describe('is-verified.test.js', function () {
     context = {
       type: 'before',
       method: 'create',
-      params: { user: { email: 'a@a.com', password: '0000000000' } },
+      params: {
+        provider: 'socketio',
+        user: { email: 'a@a.com', password: '0000000000' },
+      },
     };
   });
 
   it('throws if not before', () => {
     context.type = 'after';
     assert.throws(() => { isVerified()(context) }, undefined, undefined, 'after');
-  });
-
-  it('throws if not create, update or patch', () => {
-    context.method = 'find';
-    assert.throws(() => isVerified()(context), undefined, undefined, 'find');
-
-    context.method = 'get';
-    assert.throws(() => isVerified()(context), undefined, undefined, 'get');
-
-    context.method = 'remove';
-    assert.throws(() => isVerified()(context), undefined, undefined, 'remove');
   });
 
   it('works with verified used', () => {

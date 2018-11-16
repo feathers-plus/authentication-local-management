@@ -13,17 +13,17 @@ module.exports = {
   verifySignupWithShortToken,
 };
 
-async function verifySignupWithLongToken(options, verifyToken) {
+async function verifySignupWithLongToken(options, verifyToken, authUser) {
   ensureValuesAreStrings(verifyToken);
 
-  return await verifySignup(options, { verifyToken }, { verifyToken });
+  return await verifySignup(options, { verifyToken }, { verifyToken }, authUser);
 }
 
-async function verifySignupWithShortToken(options, verifyShortToken, identifyUser) {
+async function verifySignupWithShortToken(options, verifyShortToken, identifyUser, authUser) {
   ensureValuesAreStrings(verifyShortToken);
   ensureObjPropsValid(identifyUser, options.identifyUserProps);
 
-  return await verifySignup(options, identifyUser, { verifyShortToken });
+  return await verifySignup(options, identifyUser, { verifyShortToken }, authUser);
 }
 
 async function verifySignup (options, query, tokens) {

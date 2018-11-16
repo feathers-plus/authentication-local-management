@@ -14,7 +14,8 @@ Perhaps that resulted in more of a performance drop than the dev were willing to
 
 a-l-m addresses both concerns.
 
-(a) First a-l-m does not encrypt the password nor any token internally.
+#### Encryption is no longer performed internally
+a-l-m does not encrypt the password nor any token internally.
 The hooks on the user service must do so for all service calls, including those made by a-l-m.
 a-l-m provides a convenience hook to do so.
 
@@ -36,7 +37,30 @@ app.service('users').hooks = {
 // ]
 ```
 
-(b) You can use an alternate hash function, if you want to, by using another hashing hook.
+So you would configure the hooks for the users service like this.
+
+```js
+{
+  before: {
+    //all: debug(),
+    find: [ authenticate('jwt'), isVerified() ],
+    get: [ authenticate('jwt'), isVerified() ],
+    create: [ hashPasswordAndTokens(), isVerified(), addVerification() ],
+    update: [  hashPassword(), authenticate('jwt'), isVerified() ],
+    patch: [  hashPasswordAndTokens(), authenticate('jwt'), isVerified() ],
+    remove: [ authenticate('jwt'), isVerified() ]
+  },
+  after: {
+    all: protect('password'), /* Must always be the last hook */
+  },
+}
+```
+
+The isVerified would no longer be needed once its merged into feathersjs/authentication-local.
+
+#### Alternate hash function
+
+You can use an alternate hash function, if you want to, by using another hashing hook.
 
 You may want to do this if hashPassword function is too expensive in computation.
 You can the elapsed times for it, and some alternatives, by running misc/hash-timing-tests.js.
@@ -63,6 +87,48 @@ It’s an option now (https://github.com/feathersjs/feathers/blob/master/package
 Hasn’t been added to the verifier yet unfortunately so you have to extend it
 and implement your own `_comparePassword` (https://docs.feathersjs.com/api/authentication/local.html#verifier)
 ```
+
+### Authentication of calls to a-l-m
+
+Hooks are now automatically configured on the a-l-m service.
+Unauthenticated users may continue to make these calls
+- resendVerifySignup
+- verifySignupLong
+- verifySignupShort
+- sendResetPwd
+- resetPwdLong
+- resetPwdShort
+
+Now only authenticated users may make these calls
+- checkUnique
+- passwordChange
+- identityChange
+
+The default configuration is
+```js
+const { authenticate } = require('@feathersjs/authentication').hooks;
+
+const actionsNoAuth = [
+  'resendVerifySignup', 'verifySignupLong', 'verifySignupShort',
+  'sendResetPwd', 'resetPwdLong', 'resetPwdShort'
+];
+
+module.exports = {
+  before: {
+    create: async context => {
+      if (!context.data || !actionsNoAuth.includes(context.data.action)) {
+         context = await authenticate('jwt')(context);
+      }
+ 
+      context.data.authUser = context.params.user;
+        return context;
+      }
+    }  
+  }
+};
+```
+
+You can override this with your own configuration using the authManagementHooks option.
 
 ### isVerified
 
@@ -277,4 +343,56 @@ let moduleExports = {
     remove: []
   },
 };
+```
+
+### Configuring the client
+
+This is an example of configuring the client, including authenticating the client
+and configuring `authManagement`.
+The `authManagement` service needs a timeout greater than 5 seconds as multiple values may be hashed.
+
+```js
+async function configClient(host, port, email1, password1,
+  timeoutSocketio = 20000, timeoutAuthenticationClient = 20000, timeoutAuthLocalMgntClient = 20000
+) {
+  const socket = io(`http://${host}:${port}`, {
+    transports: ['websocket'],
+    forceNew: true,
+    reconnection: false,
+    extraHeaders: {},
+    timeout: timeoutSocketio,
+  });
+  client = feathersClient();
+
+  client.configure(feathersClient.socketio(socket));
+  client.configure(feathersClient.authentication({
+    storage: localStorage,
+    timeout:  timeoutAuthenticationClient,
+  }));
+
+  try {
+    await client.authenticate({
+      strategy: 'local',
+      email: email1,
+      password: password1,
+    });
+    console.log('    ... client authenticated');
+  } catch (err) {
+    console.log('    ... client could not authenticate.', err);
+    throw new Error(`Unable to authenticate: ${err.message}`);
+  }
+
+  const authLocalMgntClient = client.service('authManagement');
+  authLocalMgntClient.timeout = timeoutAuthLocalMgntClient; // 20000
+
+  return client;
+}
+```
+
+And you can logout with
+
+```
+client.logout();
+server.close();
+setTimeout(() => done(), delayAfterServerClose);
 ```

@@ -24,11 +24,9 @@ async function passwordChange (options, identifyUser, oldPassword, password, aut
     .find(usersService, { query: identifyUser });
   const user1 = getUserData(users);
 
-  console.log(options.ownAcctOnly, authUser, user1);
-
-  if (options.ownAcctOnly && authUser && getId(authUser) === getId(user1)) {
+  if (options.ownAcctOnly && authUser && (getId(authUser) !== getId(user1))) {
     throw new errors.BadRequest('Can only affect your own account.',
-      { errors: { $className: 'notOwnAcct' } }
+      { errors: { $className: 'not-own-acct' } }
     );
   }
 

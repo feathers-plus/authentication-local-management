@@ -10,7 +10,7 @@ const debug = makeDebug('authLocalMgnt:resendVerifySignup');
 
 // {email}, {cellphone}, {verifyToken}, {verifyShortToken},
 // {email, cellphone, verifyToken, verifyShortToken}
-module.exports = async function resendVerifySignup (options, identifyUser, notifierOptions) {
+module.exports = async function resendVerifySignup (options, identifyUser, notifierOptions, authUser) {
   debug('identifyUser=', identifyUser);
   const usersService = options.app.service(options.service);
   const usersServiceIdName = usersService.id;
