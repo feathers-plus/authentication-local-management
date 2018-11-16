@@ -3,6 +3,7 @@ const errors = require('@feathersjs/errors');
 const makeDebug = require('debug');
 const comparePasswords = require('./helpers/compare-passwords');
 const ensureObjPropsValid = require('./helpers/ensure-obj-props-valid');
+const getId = require('./helpers/get-id');
 const getLongToken = require('./helpers/get-long-token');
 const getShortToken = require('./helpers/get-short-token');
 const getUserData = require('./helpers/get-user-data');
@@ -12,7 +13,9 @@ const debug = makeDebug('authLocalMgnt:identityChange');
 
 module.exports = identityChange;
 
-async function identityChange (options, identifyUser, password, changesIdentifyUser, authUser) {
+async function identityChange (
+  options, identifyUser, password, changesIdentifyUser, authUser, provider
+) {
   // note this call does not update the authenticated user info in hooks.params.user.
   debug('identityChange', password, changesIdentifyUser);
   const usersService = options.app.service(options.service);
@@ -24,6 +27,12 @@ async function identityChange (options, identifyUser, password, changesIdentifyU
   const users = await options.customizeCalls.identityChange
     .find(usersService, { query: identifyUser });
   const user1 = getUserData(users);
+
+  if (options.ownAcctOnly && authUser && (getId(authUser) !== getId(user1))) {
+    throw new errors.BadRequest('Can only affect your own account.',
+      { errors: { $className: 'not-own-acct' } }
+    );
+  }
 
   try {
     await comparePasswords(password, user1[options.passwordField], () => {}, options.bcryptCompare);

@@ -121,14 +121,20 @@ module.exports = {
       }
  
       context.data.authUser = context.params.user;
-        return context;
-      }
+      context.data.provider = context.params.provider;
+      return context;
     }  
   }
 };
 ```
 
 You can override this with your own configuration using the authManagementHooks option.
+
+### Client may only affect their own account
+
+Client calls for password and identityChange may now only affect their own account.
+
+This can be controlled by options.ownAcctOnly whose default is true.
 
 ### isVerified
 
@@ -262,6 +268,19 @@ You can check the src/ modules for where these are called.
 You can provide an options.customizeCalls object when initializing the a-l-m.
 Your functions will be *merged* with the defaults, so you only need specify the ones which changed.
 
+### Customization of errors
+
+When a-l-m throws for any reason, option.catchErr is called. The default is
+
+```js
+  catchErr: (err, options, data) => {
+    return Promise.reject(err); // support both async and Promise interfaces
+  },
+  ```
+  
+You can override this to return whatever error you want (by throwing) or returning whatever response you want to the client (by return {...}).
+
+This handles issues such as https://github.com/feathers-plus/feathers-authentication-management/issues/85
 
 ### addVerification
 

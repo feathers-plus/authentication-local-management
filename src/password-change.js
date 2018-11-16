@@ -12,7 +12,7 @@ const debug = makeDebug('authLocalMgnt:passwordChange');
 
 module.exports = passwordChange;
 
-async function passwordChange (options, identifyUser, oldPassword, password, authUser) {
+async function passwordChange (options, identifyUser, oldPassword, password, authUser, provider) {
   debug('passwordChange', oldPassword, password);
   const usersService = options.app.service(options.service);
   const usersServiceIdName = usersService.id;

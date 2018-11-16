@@ -8,7 +8,7 @@ const debug = makeDebug('authLocalMgnt:checkUnique');
 module.exports = checkUnique;
 
 // This module is usually called from the UI to check username, email, etc. are unique.
-async function checkUnique (options, identifyUser, ownId, meta, authUser) {
+async function checkUnique (options, identifyUser, ownId, meta, authUser, provider) {
   debug('checkUnique', identifyUser, ownId, meta);
   const usersService = options.app.service(options.service);
   const usersServiceIdName = usersService.id;

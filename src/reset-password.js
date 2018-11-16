@@ -15,20 +15,20 @@ module.exports = {
   resetPwdWithShortToken,
 };
 
-async function resetPwdWithLongToken(options, resetToken, password, authUser) {
+async function resetPwdWithLongToken(options, resetToken, password, authUser, provider) {
   ensureValuesAreStrings(resetToken, password);
 
-  return await resetPassword(options, { resetToken }, { resetToken }, password, authUser);
+  return await resetPassword(options, { resetToken }, { resetToken }, password, authUser, provider);
 }
 
-async function resetPwdWithShortToken(options, resetShortToken, identifyUser, password, authUser) {
+async function resetPwdWithShortToken(options, resetShortToken, identifyUser, password, authUser, provider) {
   ensureValuesAreStrings(resetShortToken, password);
   ensureObjPropsValid(identifyUser, options.identifyUserProps);
 
-  return await resetPassword(options, identifyUser, { resetShortToken }, password, authUser);
+  return await resetPassword(options, identifyUser, { resetShortToken }, password, authUser, provider);
 }
 
-async function resetPassword (options, query, tokens, password, authUser) {
+async function resetPassword (options, query, tokens, password, authUser, provider) {
   debug('resetPassword', query, tokens, password);
   const usersService = options.app.service(options.service);
   const usersServiceIdName = usersService.id;

@@ -13,20 +13,20 @@ module.exports = {
   verifySignupWithShortToken,
 };
 
-async function verifySignupWithLongToken(options, verifyToken, authUser) {
+async function verifySignupWithLongToken(options, verifyToken, authUser, provider) {
   ensureValuesAreStrings(verifyToken);
 
-  return await verifySignup(options, { verifyToken }, { verifyToken }, authUser);
+  return await verifySignup(options, { verifyToken }, { verifyToken }, authUser, provider);
 }
 
-async function verifySignupWithShortToken(options, verifyShortToken, identifyUser, authUser) {
+async function verifySignupWithShortToken(options, verifyShortToken, identifyUser, authUser, provider) {
   ensureValuesAreStrings(verifyShortToken);
   ensureObjPropsValid(identifyUser, options.identifyUserProps);
 
-  return await verifySignup(options, identifyUser, { verifyShortToken }, authUser);
+  return await verifySignup(options, identifyUser, { verifyShortToken }, authUser, provider);
 }
 
-async function verifySignup (options, query, tokens) {
+async function verifySignup (options, query, tokens, authUser, provider) {
   debug('verifySignup', query, tokens);
   const usersService = options.app.service(options.service);
   const usersServiceIdName = usersService.id;

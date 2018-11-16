@@ -98,6 +98,7 @@ describe('scaffolding.test.js', () => {
       delete options.bcryptCompare;
       delete options.customizeCalls;
       delete options.authManagementHooks;
+      delete options.catchErr;
 
       const expected = Object.assign({}, optionsDefault, userMgntOptions);
       delete expected.app;
@@ -105,6 +106,7 @@ describe('scaffolding.test.js', () => {
       delete expected.bcryptCompare;
       delete expected.customizeCalls;
       delete expected.authManagementHooks;
+      delete expected.catchErr;
 
       assert.deepEqual(options, expected);
     });
@@ -152,6 +154,7 @@ describe('scaffolding.test.js', () => {
       delete options.bcryptCompare;
       delete options.customizeCalls;
       delete options.authManagementHooks;
+      delete options.catchErr;
 
       const expected = Object.assign({}, optionsDefault, userMgntOptions);
       delete expected.app;
@@ -159,6 +162,7 @@ describe('scaffolding.test.js', () => {
       delete expected.bcryptCompare;
       delete expected.customizeCalls;
       delete expected.authManagementHooks;
+      delete expected.catchErr;
 
       assert.deepEqual(options, expected);
 
@@ -171,6 +175,7 @@ describe('scaffolding.test.js', () => {
       delete options1.bcryptCompare;
       delete options1.customizeCalls;
       delete options1.authManagementHooks;
+      delete options1.catchErr;
 
       const expected1 = Object.assign({}, optionsDefault, orgMgntOptions);
       delete expected1.app;
@@ -178,6 +183,7 @@ describe('scaffolding.test.js', () => {
       delete expected1.bcryptCompare;
       delete expected1.customizeCalls;
       delete expected1.authManagementHooks;
+      delete expected1.catchErr;
 
       assert.deepEqual(options1, expected1);
     });

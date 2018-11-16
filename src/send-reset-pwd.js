@@ -11,7 +11,7 @@ const debug = makeDebug('authLocalMgnt:sendResetPwd');
 
 module.exports = sendResetPwd;
 
-async function sendResetPwd (options, identifyUser, notifierOptions, authUser) {
+async function sendResetPwd (options, identifyUser, notifierOptions, authUser, provider) {
   debug('sendResetPwd');
   const usersService = options.app.service(options.service);
   const usersServiceIdName = usersService.id;
@@ -19,7 +19,7 @@ async function sendResetPwd (options, identifyUser, notifierOptions, authUser) {
   ensureObjPropsValid(identifyUser, options.identifyUserProps);
 
   const users = await options.customizeCalls.sendResetPwd
-    .find(usersService, { query: identifyUser });
+    .find(usersService, { query: identifyUser }, provider);
   const user1 = getUserData(users,  options.skipIsVerifiedCheck ? [] : ['isVerified']);
 
   const user2 = Object.assign(user1, {

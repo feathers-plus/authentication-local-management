@@ -35,6 +35,9 @@ const optionsDefault = {
   sanitizeUserForClient,
   bcryptCompare: bcrypt.compare,
   authManagementHooks: { before: { create: authManagementHook } },
+  catchErr: (err, options, data) => {
+    return Promise.reject(err); // support both async and Promise interfaces
+  },
   customizeCalls: null, // Value set during configuration.
 };
 
@@ -44,6 +47,7 @@ async function authManagementHook(context) {
   }
 
   context.data.authUser = context.params.user;
+  context.data.provider = context.params.provider;
   return context;
 }
 
@@ -91,8 +95,7 @@ const  optionsCustomizeCalls = {
       await usersService.patch(id, data, params),
   },
   sendResetPwd: {
-    find: async (usersService, params = {}) =>
-      await usersService.find(params),
+    find: async (usersService, params = {}) => await usersService.find(params),
     patch: async (usersService, id, data, params = {}) =>
       await usersService.patch(id, data, params),
   },
@@ -132,44 +135,52 @@ function authLocalMgntMethods(options) {
     async create (data) {
       debug(`create called. action=${data.action}`);
 
-      // ******************** eliminate rec.id || rec._id checking in favor of getId() *************
       try {
         switch (data.action) {
           case 'checkUnique':
             return await checkUnique(
-              options, data.value, data.ownId || null, data.meta || {}, data.authUser
+              options, data.value, data.ownId || null, data.meta || {},
+              data.authUser, data.provider
               );
           case 'resendVerifySignup':
             return await resendVerifySignup(
-              options, data.value, data.notifierOptions, data.authUser
+              options, data.value, data.notifierOptions,
+              data.authUser, data.provider
             );
           case 'verifySignupLong':
             return await verifySignupWithLongToken(
-              options, data.value, data.authUser
+              options, data.value,
+              data.authUser, data.provider
             );
           case 'verifySignupShort':
             return await verifySignupWithShortToken(
-              options, data.value.token, data.value.user, data.authUser
+              options, data.value.token, data.value.user,
+              data.authUser, data.provider
             );
           case 'sendResetPwd':
             return await sendResetPwd(
-              options, data.value, data.notifierOptions, data.authUser
+              options, data.value, data.notifierOptions,
+              data.authUser, data.provider
             );
           case 'resetPwdLong':
             return await resetPwdWithLongToken(
-              options, data.value.token, data.value.password, data.authUser
+              options, data.value.token, data.value.password,
+              data.authUser, data.provider
             );
           case 'resetPwdShort':
             return await resetPwdWithShortToken(
-              options, data.value.token, data.value.user, data.value.password, data.authUser
+              options, data.value.token, data.value.user, data.value.password,
+              data.authUser, data.provider
             );
           case 'passwordChange':
             return await passwordChange(
-              options, data.value.user, data.value.oldPassword, data.value.password, data.authUser
+              options, data.value.user, data.value.oldPassword, data.value.password,
+              data.authUser, data.provider
             );
           case 'identityChange':
             return await identityChange(
-              options, data.value.user, data.value.password, data.value.changes, data.authUser
+              options, data.value.user, data.value.password, data.value.changes,
+              data.authUser, data.provider
             );
           case 'options':
             return options;
@@ -181,7 +192,7 @@ function authLocalMgntMethods(options) {
             );
         }
       } catch (err) {
-        return Promise.reject(err); // support both async and Promise interfaces
+        return options.catchErr(err, options, data);
       }
     }
   }
