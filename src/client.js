@@ -1,5 +1,5 @@
 
-// Wrapper for client interface to feathers-authenticate-management
+// Wrapper for client interface to authentication-local-management
 
 function AuthManagement (app) { // eslint-disable-line no-unused-vars
   if (!(this instanceof AuthManagement)) {

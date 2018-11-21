@@ -1,14 +1,14 @@
 
 const addVerification = require('./add-verification');
 const conversionSql = require('./conversion-sql');
-const hashPasswordAndTokens = require('./hash-password-and-tokens');
 const isVerified = require('./is-verified');
+const localManagementHook = require('./local-management-hook');
 const removeVerification = require('./remove-verification');
 
 module.exports = {
   addVerification,
   conversionSql,
-  hashPasswordAndTokens,
   isVerified,
+  localManagementHook,
   removeVerification
 };

@@ -90,6 +90,20 @@ and implement your own `_comparePassword` (https://docs.feathersjs.com/api/authe
 
 ### Authentication of calls to a-l-m
 
+```js
+  const { localManagementHook } = require('authentication-local-management/src/hooks');
+
+  app.configure(authLocalMgnt({
+    // ... config
+  }));
+
+  app.service('authManagement').hooks({
+    before: {
+      create: localManagementHook()
+    }
+  });
+```
+
 Hooks are now automatically configured on the a-l-m service.
 Unauthenticated users may continue to make these calls
 - resendVerifySignup
@@ -132,7 +146,7 @@ You can override this with your own configuration using the authManagementHooks 
 
 ### Client may only affect their own account
 
-Client calls for password and identityChange may now only affect their own account.
+Client calls for passwordChange and identityChange may now only affect their own account.
 
 This can be controlled by options.ownAcctOnly whose default is true.
 
@@ -288,6 +302,30 @@ It now works correctly when context.data is an array.
 
 ## Documentation
 
+### cli+ JSON-schema for user-entity
+
+If you are using the cli+ generator, the user entity's JSON-schema could be defined as
+```js
+  // Fields in the model.
+  properties: {
+    // !code: schema_properties
+    /* eslint-disable */
+    _id:              { type: 'ID' },
+    email:            { type: 'string',  minLength:  8, maxLength: 40, faker: 'internet.email'           },
+    password:         { type: 'string',  minLength:  4, maxLength: 30 },
+    isVerified:       { type: 'boolean' },
+    verifyExpires:    { type: 'integer',                               faker: { exp: 'Date.now() +  5' } },
+    verifyToken:      { type: 'string',  minLength: 30, maxLength: 30, faker: { exp: 'null'            } },
+    verifyShortToken: { type: 'string',  minLength:  6, maxLength:  6, faker: { exp: 'null'            } },
+    verifyChange:     { type: 'array',                                 faker: { exp: '[]'              } },
+    resetExpires:     { type: 'integer',                               faker: { exp: 'Date.now() +  8' } },
+    resetToken:       { type: 'string',  minLength: 30, maxLength: 30, faker: { exp: 'null'            } },
+    resetShortToken:  { type: 'string',  minLength:  6, maxLength:  6, faker: { exp: 'null'            } },
+    /* eslint-enable */
+    // !end
+  },
+```
+
 ### Hooks for the user-entity
 
 a-l-m externalizes some of the required processing into hooks.
@@ -415,3 +453,18 @@ client.logout();
 server.close();
 setTimeout(() => done(), delayAfterServerClose);
 ```
+
+
+## new items
+
+- alm is now configured in a fashion similar to src/authentication.js.
+This means the dev has to configure the alm hooks after configuring alm.
+This allows the hooks to be customized.
+    - hook not in options
+    - actionsNoAuth added to options
+
+- use hashPassword instead of hashPasswordAndTokens
+
+- isVerified must follow every authenticate('jwt')
+
+- how do we prevent unverified clients from authenticating with app.authenticate()?

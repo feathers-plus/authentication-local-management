@@ -16,7 +16,7 @@ const { verifySignupWithLongToken, verifySignupWithShortToken } = require('./ver
 const debug = makeDebug('authLocalMgnt:service');
 const actionsNoAuth = [
   'resendVerifySignup', 'verifySignupLong', 'verifySignupShort',
-  'sendResetPwd', 'resetPwdLong', 'resetPwdShort'
+  'sendResetPwd', 'resetPwdLong', 'resetPwdShort',
 ];
 
 const optionsDefault = {
@@ -31,25 +31,18 @@ const optionsDefault = {
   resetDelay: 1000 * 60 * 60 * 2, // 2 hours
   delay: 1000 * 60 * 60 * 24 * 5, // 5 days
   identifyUserProps: ['email'],
+  actionsNoAuth: [
+    'resendVerifySignup', 'verifySignupLong', 'verifySignupShort',
+    'sendResetPwd', 'resetPwdLong', 'resetPwdShort',
+  ],
   ownAcctOnly: true,
   sanitizeUserForClient,
   bcryptCompare: bcrypt.compare,
-  authManagementHooks: { before: { create: authManagementHook } },
   catchErr: (err, options, data) => {
     return Promise.reject(err); // support both async and Promise interfaces
   },
   customizeCalls: null, // Value set during configuration.
 };
-
-async function authManagementHook(context) {
-  if (!context.data || !actionsNoAuth.includes(context.data.action)) {
-    context = await authenticate('jwt')(context);
-  }
-
-  context.data.authUser = context.params.user;
-  context.data.provider = context.params.provider;
-  return context;
-}
 
 /* Call options.customizeCalls using
 const users = await options.customizeCalls.identityChange
@@ -112,9 +105,7 @@ module.exports = authenticationLocalManagement;
 function authenticationLocalManagement(options1 = {}) {
   debug('service being configured.');
 
-  return function () {
-    const app = this;
-
+  return function (app) {
     // Get defaults from config/default.json
     const authOptions = app.get('authentication') || {};
     optionsDefault.service = authOptions.service || optionsDefault.service;
@@ -124,9 +115,9 @@ function authenticationLocalManagement(options1 = {}) {
     const options = Object.assign({}, optionsDefault, options1, { app });
     options.customizeCalls = merge({}, optionsCustomizeCalls, options1.customizeCalls || {});
 
-    options.app.use(options.path, authLocalMgntMethods(options));
+    app.set('localManagement', options);
 
-    app.service('authManagement').hooks(options.authManagementHooks)
+    options.app.use(options.path, authLocalMgntMethods(options));
   };
 }
 
@@ -182,8 +173,6 @@ function authLocalMgntMethods(options) {
               options, data.value.user, data.value.password, data.value.changes,
               data.authUser, data.provider
             );
-          case 'options':
-            return options;
           default:
             return Promise.reject(
               new errors.BadRequest(`Action '${data.action}' is invalid.`,

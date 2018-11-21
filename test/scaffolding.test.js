@@ -15,6 +15,10 @@ const optionsDefault = {
   shortTokenLen: 6,
   shortTokenDigits: true,
   resetDelay: 1000 * 60 * 60 * 2, // 2 hours
+  actionsNoAuth: [
+    'resendVerifySignup', 'verifySignupLong', 'verifySignupShort',
+    'sendResetPwd', 'resetPwdLong', 'resetPwdShort',
+  ],
   delay: 1000 * 60 * 60 * 24 * 5, // 5 days
   identifyUserProps: ['email'],
   sanitizeUserForClient: helpers.sanitizeUserForClient
@@ -78,21 +82,9 @@ describe('scaffolding.test.js', () => {
       app.setup();
     });
 
-    it('can create an item', async () => {
-      const user = app.service('/users');
+    it('configures', () => {
+      const options = app.get('localManagement');
 
-      const result = await user.create({ username: 'John Doe' });
-      assert.equal(result.username, 'John Doe');
-      assert.equal(result.verifyShortToken.length, 8);
-    });
-
-    it('can call service', async () => {
-      const authLocalMgntService = app.service('authManagement');
-
-      const options = await authLocalMgntService.create({ action: 'options' });
-
-      assert.property(options, 'app');
-      assert.property(options, 'notifier');
       delete options.app;
       delete options.notifier;
       delete options.bcryptCompare;
@@ -109,6 +101,25 @@ describe('scaffolding.test.js', () => {
       delete expected.catchErr;
 
       assert.deepEqual(options, expected);
+    });
+
+    it('can create an item', async () => {
+      const user = app.service('/users');
+
+      const result = await user.create({ username: 'John Doe' });
+      assert.equal(result.username, 'John Doe');
+      assert.equal(result.verifyShortToken.length, 8);
+    });
+
+    it('can call service', async () => {
+      const authLocalMgntService = app.service('authManagement');
+
+      const result = await authLocalMgntService.create({
+        action: 'checkUnique',
+        value: {}
+      });
+
+      assert.strictEqual(result, null);
     });
   });
 
@@ -131,7 +142,7 @@ describe('scaffolding.test.js', () => {
       const result = await user.create({ username: 'John Doe' })
 
       assert.equal(result.username, 'John Doe');
-      assert.equal(result.verifyShortToken.length, 8);
+      assert.equal(result.verifyShortToken.length, 10);
 
       // create an organization item
       const result1 = await organization.create({ organization: 'Black Ice' });
@@ -145,47 +156,20 @@ describe('scaffolding.test.js', () => {
       const authMgntOrgService = app.service('authManagement/org'); // *** which one
 
       // call the user instance
-      const options = await authLocalMgntService.create({ action: 'options' });
+      const result = await authLocalMgntService.create({
+        action: 'checkUnique',
+        value: {}
+      });
 
-      assert.property(options, 'app');
-      assert.property(options, 'notifier');
-      delete options.app;
-      delete options.notifier;
-      delete options.bcryptCompare;
-      delete options.customizeCalls;
-      delete options.authManagementHooks;
-      delete options.catchErr;
-
-      const expected = Object.assign({}, optionsDefault, userMgntOptions);
-      delete expected.app;
-      delete expected.notifier;
-      delete expected.bcryptCompare;
-      delete expected.customizeCalls;
-      delete expected.authManagementHooks;
-      delete expected.catchErr;
-
-      assert.deepEqual(options, expected);
+      assert.strictEqual(result, null);
 
       // call the organization instance
-      const options1 = await authMgntOrgService.create({ action: 'options' });
-      assert.property(options1, 'app');
-      assert.property(options1, 'notifier');
-      delete options1.app;
-      delete options1.notifier;
-      delete options1.bcryptCompare;
-      delete options1.customizeCalls;
-      delete options1.authManagementHooks;
-      delete options1.catchErr;
+      const result1 = await authMgntOrgService.create({
+        action: 'checkUnique',
+        value: {}
+      });
 
-      const expected1 = Object.assign({}, optionsDefault, orgMgntOptions);
-      delete expected1.app;
-      delete expected1.notifier;
-      delete expected1.bcryptCompare;
-      delete expected1.customizeCalls;
-      delete expected1.authManagementHooks;
-      delete expected1.catchErr;
-
-      assert.deepEqual(options1, expected1);
+      assert.strictEqual(result1, null);
     });
   });
 });

@@ -7,10 +7,10 @@ module.exports = addVerification;
 function addVerification (path) {
   return async context => {
     checkContext(context, 'before', ['create', 'patch', 'update']);
+
     const items = getItems(context);
     const recs = Array.isArray(items) ? items : [items];
-
-    const options = await context.app.service(path || 'authManagement').create({ action: 'options' });
+    const options = context.app.get('localManagement');
 
     for (let i = 0, ilen = recs.length; i < ilen; i++) {
       const rec = recs[i];

@@ -5,7 +5,7 @@ const feathers = require('@feathersjs/feathers');
 const feathersMemory = require('feathers-memory');
 const authLocalMgnt = require('../src/index');
 const SpyOn = require('./helpers/basic-spy');
-const hashPasswordAndTokens = require('../src/hooks/hash-password-and-tokens');
+const { localManagementHook } = require('../src/hooks/index');
 const { timeoutEachTest } = require('./helpers/config');
 
 const express = require('@feathersjs/express');
@@ -133,9 +133,12 @@ describe('client-server.test.js', function () {
           },
         });
 
-        assert(false, 'Unexpected succeeded.');
+        assert(false, 'Unexpectedly succeeded.');
       } catch (err) {
-        assert.equal(err.errors.$className, 'not-own-acct');
+        if (err.messahe === 'Unexpectedly succeeded.') throw err;
+
+        console.log(err);
+        assert.equal((err.errors || {}).$className, 'not-own-acct');
       }
     });
   });
@@ -191,9 +194,12 @@ describe('client-server.test.js', function () {
           },
         });
 
-        assert(false, 'Unexpected succeeded.');
+        assert(false, 'Unexpectedly succeeded.');
       } catch (err) {
-        assert.equal(err.errors.$className, 'not-own-acct');
+        if (err.messahe === 'Unexpected succeeded.') throw err;
+
+        console.log(err);
+        assert.equal((err.errors || {}).$className, 'not-own-acct');
       }
     });
   });
@@ -283,6 +289,12 @@ function servicesIndexJs(app1) {
   app1.configure(authLocalMgnt({
     // ... config
   }));
+
+  app1.service('authManagement').hooks({
+    before: {
+      create: localManagementHook()
+    }
+  });
 }
 
 // Similar to src/services/users/users.service.js
@@ -315,9 +327,9 @@ function servicesUsersUsersHooksJs(app1) {
       //all: debug(),
       find: [ authenticate('jwt'), isVerified() ],
       get: [ authenticate('jwt'), isVerified() ],
-      create: [ hashPasswordAndTokens(), isVerified(), addVerification() ],
+      create: [ hashPassword(), isVerified(), addVerification() ],
       update: [  hashPassword(), authenticate('jwt'), isVerified() ],
-      patch: [  hashPasswordAndTokens(), authenticate('jwt'), isVerified() ],
+      patch: [  hashPassword(), authenticate('jwt'), isVerified() ],
       remove: [ authenticate('jwt'), isVerified() ]
     },
     after: {

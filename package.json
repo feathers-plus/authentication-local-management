@@ -1,5 +1,5 @@
 {
-  "name": "authentication-local-management",
+  "name": "@feathers-plus/authentication-local-management",
   "description": "Adds sign up verification, forgotten password reset, and other capabilities to local feathers-authentication ",
   "version": "3.0.0",
   "repository": {
