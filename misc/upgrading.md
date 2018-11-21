@@ -415,20 +415,3 @@ And you can logout with
 ```js
 client.logout();
 ```
-
-
-## new items
-
-- alm is now configured in a fashion similar to src/authentication.js.
-This means the dev has to configure the alm hooks after configuring alm.
-This allows the hooks to be customized.
-    - hook not in options
-- actionsNoAuth added to options
-
-- use hashPassword instead of hashPasswordAndTokens
-
-- isVerified must follow every authenticate('jwt')
-
-- how do we prevent unverified clients from authenticating with app.authenticate()?
-
-- action: 'options' removed. You can use app.get('localManagement'), and the latter is more secure.
