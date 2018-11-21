@@ -4,69 +4,28 @@
 
 ### Encryption of password and tokens
 
-f-a-m internally encrypted the values for password, verifyToken, resetToken and resetShortToken.
-The most common issue occurring in the repo was the app rehashing the password in the before hooks.
+f-a-m encrypted the password internally.
+The most common issue occurring in that repo was the app rehashing the password in the before hooks.
 The app had to run hashPassword in the hooks only if the service had not been by the repo.
 
 Related to this, some devs asked about the possibility to use alternate hash functions rather than
 the one Feathers uses in hashPassword.
-Perhaps that resulted in more of a performance drop than the dev were willing to accept.
 
 a-l-m addresses both concerns.
 
 #### Encryption is no longer performed internally
-a-l-m does not encrypt the password nor any token internally.
+a-l-m does not encrypt the password internally.
 The hooks on the user service must do so for all service calls, including those made by a-l-m.
-a-l-m provides a convenience hook to do so.
-
-```js
-const { hashPasswordAndTokens } = require('@feathersjs/authentication-local-management').hooks;
-
-app.service('users').hooks = {
-  before: {
-    create: hashPasswordAndTokens(),
-    patch: hashPasswordAndTokens(),
-  },
-};
-
-// hashPasswordAndTokens(password, verifyToken, resetToken, resetShortToken) is equivalent to
-// [ hashPassword({ passwordField: password || 'password'}),
-//   hashPassword({ passwordField: verifyToken || 'verifyToken' }),
-//   hashPassword({ passwordField: resetToken || 'resetToken'}),
-//   hashPassword({ passwordField: resetShortToken || 'resetShortToken'}),
-// ]
-```
-
-So you would configure the hooks for the users service like this.
-
-```js
-{
-  before: {
-    //all: debug(),
-    find: [ authenticate('jwt'), isVerified() ],
-    get: [ authenticate('jwt'), isVerified() ],
-    create: [ hashPasswordAndTokens(), isVerified(), addVerification() ],
-    update: [  hashPassword(), authenticate('jwt'), isVerified() ],
-    patch: [  hashPasswordAndTokens(), authenticate('jwt'), isVerified() ],
-    remove: [ authenticate('jwt'), isVerified() ]
-  },
-  after: {
-    all: protect('password'), /* Must always be the last hook */
-  },
-}
-```
-
-The isVerified would no longer be needed once its merged into feathersjs/authentication-local.
 
 #### Alternate hash function
 
 You can use an alternate hash function, if you want to, by using another hashing hook.
 
 You may want to do this if hashPassword function is too expensive in computation.
-You can the elapsed times for it, and some alternatives, by running misc/hash-timing-tests.js.
+You can display the elapsed times for it, and some alternatives, by running misc/hash-timing-tests.js.
 Results vary from run to run as hashPassword randomly varies the number of hash cycles to impede timing attacks.  
 
-You would also have to pass a-l-m an option which compares a plain string to its encrypted value.
+You will also have to pass a-l-m an option which compares a plain string to its encrypted value.
 See bcryptjs##compare for information on such a function's signature.
 The repo uses the callback version of that function. The default option is:
 ```js
@@ -77,7 +36,7 @@ app.configure(authLocalMgnt({
 }));
 ```
 
-Additional work is needed for the authentication verifier.
+However additional work is still needed for the authentication verifier.
 ```txt
 daffl Nov. 08, 2018 [2:03 PM]
 It’s an option now (https://github.com/feathersjs/feathers/blob/master/packages/authentication-local/lib/hooks/hash-password.js)
@@ -90,22 +49,7 @@ and implement your own `_comparePassword` (https://docs.feathersjs.com/api/authe
 
 ### Authentication of calls to a-l-m
 
-```js
-  const { localManagementHook } = require('authentication-local-management/src/hooks');
-
-  app.configure(authLocalMgnt({
-    // ... config
-  }));
-
-  app.service('authManagement').hooks({
-    before: {
-      create: localManagementHook()
-    }
-  });
-```
-
-Hooks are now automatically configured on the a-l-m service.
-Unauthenticated users may continue to make these calls
+By default, unauthenticated users may continue to make these calls
 - resendVerifySignup
 - verifySignupLong
 - verifySignupShort
@@ -113,46 +57,22 @@ Unauthenticated users may continue to make these calls
 - resetPwdLong
 - resetPwdShort
 
-Now only authenticated users may make these calls
-- checkUnique
-- passwordChange
-- identityChange
-
-The default configuration is
+You can override this with options.actionsNoAuth whose default is
 ```js
-const { authenticate } = require('@feathersjs/authentication').hooks;
-
-const actionsNoAuth = [
+actionsNoAuth: [
   'resendVerifySignup', 'verifySignupLong', 'verifySignupShort',
-  'sendResetPwd', 'resetPwdLong', 'resetPwdShort'
-];
-
-module.exports = {
-  before: {
-    create: async context => {
-      if (!context.data || !actionsNoAuth.includes(context.data.action)) {
-         context = await authenticate('jwt')(context);
-      }
- 
-      context.data.authUser = context.params.user;
-      context.data.provider = context.params.provider;
-      return context;
-    }  
-  }
-};
+  'sendResetPwd', 'resetPwdLong', 'resetPwdShort',
+],                                     
 ```
-
-You can override this with your own configuration using the authManagementHooks option.
 
 ### Client may only affect their own account
 
 Client calls for passwordChange and identityChange may now only affect their own account.
-
 This can be controlled by options.ownAcctOnly whose default is true.
 
 ### isVerified
 
-Does not check isVerified for calls made by the server.
+`user.isVerified` is no longer checked for calls made by the server.
 
 ## Enhancements
 
@@ -302,6 +222,50 @@ It now works correctly when context.data is an array.
 
 ## Documentation
 
+### configuring authentication-local-management
+
+a-l-m is configured like this
+
+```js
+// src/app.js
+const localManagement = require('./local-management');
+
+// ...
+app.configure(middleware);
+app.configure(authentication);
+app.configure(localManagement);
+app.configure(services);
+app.configure(channels);
+///...
+```
+
+```js
+// src/local-management.js
+const localManagement = require('authentication-local-management');
+const { localManagementHook } = require('authentication-local-management/src/hooks');
+
+let moduleExports = function (app) {
+  const config = {
+    // ...
+  };
+
+  // Set up authentication-local-management with its options
+  localManagement(config)(app);
+  
+  // app.get('localManagement') contains the expanded configuration options.
+
+  // Setup hooks
+  app.service(config.path || 'authManagement').hooks({
+    before: {
+      create: localManagementHook(app.get('actionsNoAuth')),
+    },
+  });
+};
+
+// !code: exports // !end
+module.exports = moduleExports;
+```
+
 ### cli+ JSON-schema for user-entity
 
 If you are using the cli+ generator, the user entity's JSON-schema could be defined as
@@ -337,7 +301,7 @@ Note the conversionSql hook is used only with user-entities using the Sequelize 
 ```js
 const { authenticate } = require('@feathersjs/authentication').hooks;
 const { hashPassword, protect } = require('@feathersjs/authentication-local').hooks;
-const { addVerification, conversionSql, hashPasswordAndTokens, isVerified, removeVerification } = 
+const { addVerification, conversionSql, isVerified } = 
   require('@feathers-plus/authentication-local-management').hooks;
 
 let moduleExports = {
@@ -351,39 +315,19 @@ let moduleExports = {
       // Check user has been verified i.e. isVerified === true.
       isVerified(),
     ],
-    get: [
-      authenticate('jwt'),
-      // Check user has been verified i.e. isVerified === true.
-      isVerified(),
-    ],
+    get: [ authenticate('jwt'), isVerified() ],
     create: [
       // Hash password, verifyToken, verifyShortToken, resetToken, resetShortToken. 
-      hashPasswordAndTokens(),
-      // Check user has been verified i.e. isVerified === true.
+      hashPassword(),
       isVerified(),
       // Add fields required by authentication-local-management:
       // isVerified, verifyToken, verifyShortToken, verifyChanges,
       // resetExpires, resetToken & resetShortToken.
       addVerification(), 
     ],
-    update: [
-      hashPassword(),
-      authenticate('jwt'),
-      // Check user has been verified i.e. isVerified === true.
-      isVerified(),
-    ],
-    patch: [
-      // Hash password, verifyToken, verifyShortToken, resetToken, resetShortToken.
-      hashPasswordAndTokens(),
-      authenticate('jwt'),
-      // Check user has been verified i.e. isVerified === true.
-      isVerified(),
-    ],
-    remove: [
-      authenticate('jwt'),
-      // Check user has been verified i.e. isVerified === true.
-      isVerified(),
-    ]
+    update: [ hashPassword(), authenticate('jwt'), isVerified() ],
+    patch: [ hashPassword(), authenticate('jwt'), isVerified() ],
+    remove: [ authenticate('jwt'), isVerified() ]
   },
 
   after: {
@@ -401,6 +345,26 @@ let moduleExports = {
   },
 };
 ```
+
+The isVerified would no longer be needed once its merged into feathersjs/authentication-local.
+
+### Hooks for services requiring authentication
+
+Services available only to authenticated clients would be configured like
+
+```js
+const { authenticate } = require('@feathersjs/authentication').hooks;
+const { isVerified } = require('@feathers-plus/authentication-local-management').hooks;
+
+module.exports = {
+  before: {
+   all: [ authenticate('jwt'), isVerified() ],
+   // ...
+  },
+};
+```
+
+The isVerified would no longer be needed once its merged into feathersjs/authentication-local.
 
 ### Configuring the client
 
@@ -440,7 +404,7 @@ async function configClient(host, port, email1, password1,
   }
 
   const authLocalMgntClient = client.service('authManagement');
-  authLocalMgntClient.timeout = timeoutAuthLocalMgntClient; // 20000
+  authLocalMgntClient.timeout = timeoutAuthLocalMgntClient; // 20000 !important
 
   return client;
 }
@@ -448,10 +412,8 @@ async function configClient(host, port, email1, password1,
 
 And you can logout with
 
-```
+```js
 client.logout();
-server.close();
-setTimeout(() => done(), delayAfterServerClose);
 ```
 
 
@@ -461,10 +423,12 @@ setTimeout(() => done(), delayAfterServerClose);
 This means the dev has to configure the alm hooks after configuring alm.
 This allows the hooks to be customized.
     - hook not in options
-    - actionsNoAuth added to options
+- actionsNoAuth added to options
 
 - use hashPassword instead of hashPasswordAndTokens
 
 - isVerified must follow every authenticate('jwt')
 
 - how do we prevent unverified clients from authenticating with app.authenticate()?
+
+- action: 'options' removed. You can use app.get('localManagement'), and the latter is more secure.
