@@ -1,6 +1,6 @@
 
 const errors = require('@feathersjs/errors');
-const { checkContext, debug } = require('feathers-hooks-common');
+const { checkContext } = require('feathers-hooks-common');
 
 module.exports = isVerified;
 

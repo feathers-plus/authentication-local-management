@@ -3,10 +3,10 @@ const { authenticate } = require('@feathersjs/authentication').hooks;
 
 module.exports = localManagementHook;
 
-function localManagementHook(actionsNoAuth) {
+function localManagementHook (actionsNoAuth) {
   actionsNoAuth = actionsNoAuth || [
     'resendVerifySignup', 'verifySignupLong', 'verifySignupShort',
-    'sendResetPwd', 'resetPwdLong', 'resetPwdShort',
+    'sendResetPwd', 'resetPwdLong', 'resetPwdShort'
   ];
 
   return async context => {
@@ -18,5 +18,5 @@ function localManagementHook(actionsNoAuth) {
     context.data.provider = context.params.provider;
 
     return context;
-  }
+  };
 }

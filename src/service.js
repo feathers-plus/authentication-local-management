@@ -24,7 +24,8 @@ const optionsDefault = {
   service: '/users', // Need exactly this for test suite. Overridden by config/default.json.
   path: 'authManagement',
   passwordField: 'password', //  Overridden by config/default.json.
-  notifier: async () => {},
+  notifier: async () => () => {},
+  buildEmailLink,
   longTokenLen: 15, // Token's length will be twice this by default.
   shortTokenLen: 6,
   shortTokenDigits: true,
@@ -42,6 +43,8 @@ const optionsDefault = {
     return Promise.reject(err); // support both async and Promise interfaces
   },
   customizeCalls: null, // Value set during configuration.
+  // Need option URL for notifier emails e.g. 'http://localhost:3030/' + type + '?token=' + hash ?????????????????????
+  // emailLink: (action, slug) => 'http://localhost:3030/' + type + '?token=' + slug, ????????????????????????????
 };
 
 /* Call options.customizeCalls using
@@ -53,6 +56,22 @@ const user2 = await options.customizeCalls.identityChange
 
 });
 */
+
+function buildEmailLink(app) {
+  const isProd = process.env.NODE_ENV === 'production';
+  const port = (app.get('port') === '80' || isProd) ? '' : `:${app.get('port')}`;
+  const host = (app.get('host') === 'HOST')? 'localhost': app.get('host');
+  const protocol = (app.get('protocol') === 'PROTOCOL')? 'http': app.get('protocol');
+  const url = `${protocol}://${host}${port}/`;
+
+  const actionToSlug = {
+    aaa: 'aaa',
+  };
+
+  return (type, hash) => {
+    return `${url}${type}/${hash}`;
+  };
+}
 
 const  optionsCustomizeCalls = {
   checkUnique: {
@@ -112,7 +131,8 @@ function authenticationLocalManagement(options1 = {}) {
     optionsDefault.passwordField =
       (authOptions.local || {}).passwordField || optionsDefault.passwordField;
 
-    const options = Object.assign({}, optionsDefault, options1, { app });
+    let options = Object.assign({}, optionsDefault, options1, { app });
+    options.notifier = options.notifier(app);
     options.customizeCalls = merge({}, optionsCustomizeCalls, options1.customizeCalls || {});
 
     app.set('localManagement', options);

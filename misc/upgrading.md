@@ -74,6 +74,16 @@ This can be controlled by options.ownAcctOnly whose default is true.
 
 `user.isVerified` is no longer checked for calls made by the server.
 
+### client convenience methods
+
+The client convenient methods in feathers-authentication-management/src/client.js have been removed.
+They were one line wrappers around service calls to the f-a-m service.
+They created a conceptual burden for little in return.
+People did not look at their code and ended up asking things like
+how to use them with Redux, something they would have known how to do with the service call itself.
+
+Each call to a convenience method can be replaced with a one line service call.
+
 ## Enhancements
 
 ### async/await
@@ -290,6 +300,29 @@ If you are using the cli+ generator, the user entity's JSON-schema could be defi
   },
 ```
 
+For Mongoose
+```js
+// need email, etc ?????????????????????????????????????????????????????????????????????
+isVerified: { type: Boolean },
+verifyToken: { type: String },
+verifyExpires: { type: Date },
+verifyChanges: { type: Object },
+resetToken: { type: String },
+resetExpires: { type: Date }
+```
+
+For Sequelize (duplicate)
+The test/sequelize.test.js module uses the feathers-sequelize adapter with an sqlite3 table created with
+```txt
+// need to add phone, etc ?????????????????????????????????????????????????????
+authentication-local-management$ sqlite3 ./testdata/users.sqlite3
+SQLite version 3.19.3 2017-06-08 14:26:16
+Enter ".help" for usage hints.
+sqlite> .schema
+sqlite> CREATE TABLE 'Users' ('id' INTEGER PRIMARY KEY AUTOINCREMENT, 'email' VARCHAR(60), 'password' VARCHAR(60), 'isVerified' INTEGER, 'verifyExpires' DATETIME, 'verifyToken' VARCHAR(60), 'verifyShortToken' VARCHAR(8), 'verifyChanges' VARCHAR(255), 'resetExpires' INTEGER, 'resetToken' VARCHAR(60), 'resetShortToken' VARCHAR(8));
+sqlite> 
+```
+
 ### Hooks for the user-entity
 
 a-l-m externalizes some of the required processing into hooks.
@@ -319,7 +352,7 @@ let moduleExports = {
     create: [
       // Hash password, verifyToken, verifyShortToken, resetToken, resetShortToken. 
       hashPassword(),
-      isVerified(),
+      authenticate('jwt'), isVerified(), // may or may not want to have this depending on the app
       // Add fields required by authentication-local-management:
       // isVerified, verifyToken, verifyShortToken, verifyChanges,
       // resetExpires, resetToken & resetShortToken.
@@ -415,3 +448,32 @@ And you can logout with
 ```js
 client.logout();
 ```
+
+
+## Things added
+
+- phone fields
+```txt
+    phone:            { type: 'string',  minLength:  7, maxLength: 40, faker: 'phone.phoneNumber'        },
+    searchablePhone:  { type: 'string',  minLength:  7, maxLength: 40, faker: { exp: 'rec.phone.match(/\\d+/g).join("")' } },
+    preferContact:    { enum: [ 'email', 'phone' ] },
+```
+
+- user hooks
+    - update: disallow('external')
+    - patch: iff(isProvider('external'), preventChanges(...localManagementFields)),
+    
+- option.emailLink added
+
+- options.notifier signature changed
+```js
+// from
+(type, sanitizedUser, notifierOptions) => {}
+
+// to
+(app) => (type, sanitizedUser, notifierOptions) => {}
+```
+
+- ???? do we need a language field for i18n?
+
+- option.buildEmailLink
