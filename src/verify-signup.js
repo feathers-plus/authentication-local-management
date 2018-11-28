@@ -4,7 +4,7 @@ const makeDebug = require('debug');
 const ensureObjPropsValid = require('./helpers/ensure-obj-props-valid');
 const ensureValuesAreStrings = require('./helpers/ensure-values-are-strings');
 const getUserData = require('./helpers/get-user-data');
-const notifier = require('./helpers/notifier');
+const callNotifier = require('./helpers/call-notifier');
 
 const debug = makeDebug('authLocalMgnt:verifySignup');
 
@@ -44,7 +44,7 @@ async function verifySignup (options, query, tokens, authUser, provider) {
   }
 
   const user2 = await eraseVerifyProps(user1, user1.verifyExpires > Date.now(), user1.verifyChanges || {});
-  const user3 = await notifier(options, 'verifySignup', user2)
+  const user3 = await callNotifier(options, 'verifySignup', user2)
   return options.sanitizeUserForClient(user3, options.passwordField);
 
   async function eraseVerifyProps (user, isVerified, verifyChanges) {

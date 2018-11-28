@@ -1,4 +1,5 @@
 
+const callNotifier = require('./call-notifier');
 const cloneObject = require('./clone-object');
 const comparePasswords = require('./compare-passwords');
 const concatIDAndHash = require('./concat-id-and-hash');
@@ -11,13 +12,13 @@ const getLongToken = require('./get-long-token');
 const getShortToken = require('./get-short-token');
 const getUserData = require('./get-user-data');
 const isNullsy = require('./is-nullsy');
-const notifier = require('./notifier');
 const randomBytes = require('./random-bytes');
 const randomDigits = require('./random-digits');
 const sanitizeUserForClient = require('./sanitize-user-for-client');
 const sanitizeUserForNotifier = require('./sanitize-user-for-notifier');
 
 module.exports = {
+  callNotifier,
   cloneObject,
   comparePasswords,
   concatIDAndHash,
@@ -30,7 +31,6 @@ module.exports = {
   getShortToken,
   getUserData,
   isNullsy,
-  notifier,
   randomBytes: (...args) => randomBytes(...args), // for testing, make safe from hacking
   randomDigits: (...args) => randomDigits(...args), // for testing, make safe from hacking
   sanitizeUserForClient,

@@ -6,7 +6,7 @@ const deconstructId = require('./helpers/deconstruct-id');
 const ensureObjPropsValid = require('./helpers/ensure-obj-props-valid');
 const ensureValuesAreStrings = require('./helpers/ensure-values-are-strings');
 const getUserData = require('./helpers/get-user-data');
-const notifier = require('./helpers/notifier');
+const callNotifier = require('./helpers/call-notifier');
 
 const debug = makeDebug('authLocalMgnt:resetPassword');
 
@@ -82,6 +82,6 @@ async function resetPassword (options, query, tokens, password, authUser, provid
       resetExpires: null
     });
 
-  const user3 = await notifier(options, 'resetPwd', user2);
+  const user3 = await callNotifier(options, 'resetPwd', user2);
   return options.sanitizeUserForClient(user3, options.passwordField);
 }

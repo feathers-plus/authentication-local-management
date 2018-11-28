@@ -6,7 +6,7 @@ const ensureObjPropsValid = require('./helpers/ensure-obj-props-valid');
 const ensureValuesAreStrings = require('./helpers/ensure-values-are-strings');
 const getId = require('./helpers/get-id');
 const getUserData = require('./helpers/get-user-data');
-const notifier = require('./helpers/notifier');
+const callNotifier = require('./helpers/call-notifier');
 
 const debug = makeDebug('authLocalMgnt:passwordChange');
 
@@ -41,6 +41,6 @@ async function passwordChange (options, identifyUser, oldPassword, password, aut
   const user2 = await options.customizeCalls.passwordChange
     .patch(usersService, user1[usersServiceIdName], { [options.passwordField]: password });
 
-  const user3 = await notifier(options, 'passwordChange', user2);
+  const user3 = await callNotifier(options, 'passwordChange', user2);
   return options.sanitizeUserForClient(user3, options.passwordField);
 }

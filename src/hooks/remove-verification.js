@@ -4,16 +4,17 @@ const { checkContext, getItems, replaceItems } = require('feathers-hooks-common'
 module.exports = removeVerification;
 
 function removeVerification (ifReturnTokens) {
-  return hook => {
-    checkContext(hook, 'after');
-    // Retrieve the items from the hook
-    let users = getItems(hook);
+  return context => {
+    checkContext(context, 'after');
+
+    // Retrieve the items from the context
+    let users = getItems(context);
     if (!users) return;
     const isArray = Array.isArray(users);
     users = (isArray ? users : [users]);
 
     users.forEach(user => {
-      if (!('isVerified' in user) && hook.method === 'create') {
+      if (!('isVerified' in user) && context.method === 'create') {
         /* eslint-disable no-console */
         console.warn('Property isVerified not found in user properties.');
         console.warn('Have you added authManagement\'s properties to your model? (Refer to README.md)');
@@ -21,7 +22,7 @@ function removeVerification (ifReturnTokens) {
         /* eslint-enable */
       }
 
-      if (hook.params.provider && user) { // noop if initiated by server
+      if (context.params.provider && user) { // noop if initiated by server
         delete user.verifyExpires;
         delete user.resetExpires;
         delete user.verifyChanges;
@@ -34,6 +35,6 @@ function removeVerification (ifReturnTokens) {
       }
     });
     // Replace the items within the hook
-    replaceItems(hook, isArray ? users : users[0]);
+    replaceItems(context, isArray ? users : users[0]);
   };
 }

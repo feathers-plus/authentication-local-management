@@ -474,6 +474,15 @@ client.logout();
 (app) => (type, sanitizedUser, notifierOptions) => {}
 ```
 
+- preventChangesVerification needs proper default identifyUserProps
+
 - ???? do we need a language field for i18n?
 
-- option.buildEmailLink
+- option.buildEmailLink ????? may want buildEmailLinkActionToVerb
+- hook to protect verification fields from change by client. partially in users.hooks.js
+
+- callNotifier called by: sendVerifySignup (hook), resendVerifySignup, verifySignupLong, verifySignupShort,
+sendResetPwd, resetPwdLong, resetPwdShort, passwordChange, identityChange.
+It is NOT called by: checkUnique. 
+
+- Only resendVerifySignup and sendResetPwd pass data.notifierOptions. Should all have it ????????????????????????????????????????

@@ -5,7 +5,7 @@ const ensureObjPropsValid = require('./helpers/ensure-obj-props-valid');
 const getLongToken = require('./helpers/get-long-token');
 const getShortToken = require('./helpers/get-short-token');
 const getUserData = require('./helpers/get-user-data');
-const notifier = require('./helpers/notifier');
+const callNotifier = require('./helpers/call-notifier');
 
 const debug = makeDebug('authLocalMgnt:sendResetPwd');
 
@@ -31,7 +31,7 @@ async function sendResetPwd (options, identifyUser, notifierOptions, authUser, p
     resetShortToken: await getShortToken(options.shortTokenLen, options.shortTokenDigits),
   });
 
-  notifier(options, 'sendResetPwd', user2, notifierOptions)
+  callNotifier(options, 'sendResetPwd', user2, notifierOptions)
 
   const user3 = await options.customizeCalls.sendResetPwd
     .patch(usersService, user2[usersServiceIdName], {

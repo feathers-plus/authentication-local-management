@@ -4,7 +4,7 @@ const ensureObjPropsValid = require('./helpers/ensure-obj-props-valid');
 const getLongToken = require('./helpers/get-long-token');
 const getShortToken = require('./helpers/get-short-token');
 const getUserData = require('./helpers/get-user-data');
-const notifier = require('./helpers/notifier');
+const callNotifier = require('./helpers/call-notifier');
 
 const debug = makeDebug('authLocalMgnt:resendVerifySignup');
 
@@ -33,6 +33,6 @@ module.exports = async function resendVerifySignup (
       verifyShortToken: await getShortToken(options.shortTokenLen, options.shortTokenDigits),
     });
 
-  const user3 = await notifier(options, 'resendVerifySignup', user2, notifierOptions);
+  const user3 = await callNotifier(options, 'resendVerifySignup', user2, notifierOptions);
   return options.sanitizeUserForClient(user3, options.passwordField);
 };

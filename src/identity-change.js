@@ -7,7 +7,7 @@ const getId = require('./helpers/get-id');
 const getLongToken = require('./helpers/get-long-token');
 const getShortToken = require('./helpers/get-short-token');
 const getUserData = require('./helpers/get-user-data');
-const notifier = require('./helpers/notifier');
+const callNotifier = require('./helpers/call-notifier');
 
 const debug = makeDebug('authLocalMgnt:identityChange');
 
@@ -50,6 +50,6 @@ async function identityChange (
       verifyChanges: changesIdentifyUser
     });
 
-  const user3 = await notifier(options, 'identityChange', user2, null);
+  const user3 = await callNotifier(options, 'identityChange', user2, null);
   return options.sanitizeUserForClient(user3, options.passwordField);
 }

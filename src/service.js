@@ -24,7 +24,9 @@ const optionsDefault = {
   service: '/users', // Need exactly this for test suite. Overridden by config/default.json.
   path: 'authManagement',
   passwordField: 'password', //  Overridden by config/default.json.
-  notifier: async () => () => {},
+  notifier: (app, options) => async (type, sanitizedUser, notifierOptions) => {
+    console.log('a-l-m default notifier called', type, sanitizedUser, notifierOptions);
+  },
   buildEmailLink,
   longTokenLen: 15, // Token's length will be twice this by default.
   shortTokenLen: 6,
@@ -43,8 +45,6 @@ const optionsDefault = {
     return Promise.reject(err); // support both async and Promise interfaces
   },
   customizeCalls: null, // Value set during configuration.
-  // Need option URL for notifier emails e.g. 'http://localhost:3030/' + type + '?token=' + hash ?????????????????????
-  // emailLink: (action, slug) => 'http://localhost:3030/' + type + '?token=' + slug, ????????????????????????????
 };
 
 /* Call options.customizeCalls using
@@ -61,15 +61,17 @@ function buildEmailLink(app) {
   const isProd = process.env.NODE_ENV === 'production';
   const port = (app.get('port') === '80' || isProd) ? '' : `:${app.get('port')}`;
   const host = (app.get('host') === 'HOST')? 'localhost': app.get('host');
-  const protocol = (app.get('protocol') === 'PROTOCOL')? 'http': app.get('protocol');
+  const protocol = (app.get('protocol') === 'PROTOCOL')? 'http': app.get('protocol') || 'http';
   const url = `${protocol}://${host}${port}/`;
 
-  const actionToSlug = {
-    aaa: 'aaa',
+  const actionToVerb = {
+    sendVerifySignup: 'verify',
+    resendVerifySignup: 'verify',
+    sendResetPwd: 'reset',
   };
 
   return (type, hash) => {
-    return `${url}${type}/${hash}`;
+    return `${url}${actionToVerb[type] || type}/${hash}`;
   };
 }
 
@@ -132,8 +134,8 @@ function authenticationLocalManagement(options1 = {}) {
       (authOptions.local || {}).passwordField || optionsDefault.passwordField;
 
     let options = Object.assign({}, optionsDefault, options1, { app });
-    options.notifier = options.notifier(app);
     options.customizeCalls = merge({}, optionsCustomizeCalls, options1.customizeCalls || {});
+    options.notifier = options.notifier(app, options);
 
     app.set('localManagement', options);
 
