@@ -14,7 +14,7 @@ const debug = makeDebug('authLocalMgnt:identityChange');
 module.exports = identityChange;
 
 async function identityChange (
-  options, identifyUser, password, changesIdentifyUser, authUser, provider
+  options, identifyUser, password, changesIdentifyUser, notifierOptions, authUser, provider
 ) {
   // note this call does not update the authenticated user info in hooks.params.user.
   debug('identityChange', password, changesIdentifyUser);
@@ -50,6 +50,6 @@ async function identityChange (
       verifyChanges: changesIdentifyUser
     });
 
-  const user3 = await callNotifier(options, 'identityChange', user2, null);
+  const user3 = await callNotifier(options, 'identityChange', user2, notifierOptions);
   return options.sanitizeUserForClient(user3, options.passwordField);
 }

@@ -20,8 +20,10 @@ const optionsDefault = {
     'sendResetPwd', 'resetPwdLong', 'resetPwdShort',
   ],
   delay: 1000 * 60 * 60 * 24 * 5, // 5 days
-  identifyUserProps: ['email'],
-  sanitizeUserForClient: helpers.sanitizeUserForClient
+  emailField: 'email',
+  identifyUserProps: ['email', 'dialablePhone'],
+  sanitizeUserForClient: helpers.sanitizeUserForClient,
+  dialablePhoneField: 'dialablePhone',
 };
 
 const userMgntOptions = {
@@ -91,6 +93,7 @@ describe('scaffolding.test.js', () => {
       delete options.customizeCalls;
       delete options.authManagementHooks;
       delete options.catchErr;
+      delete options.buildEmailLink;
 
       const expected = Object.assign({}, optionsDefault, userMgntOptions);
       delete expected.app;
@@ -99,6 +102,7 @@ describe('scaffolding.test.js', () => {
       delete expected.customizeCalls;
       delete expected.authManagementHooks;
       delete expected.catchErr;
+      delete expected.buildEmailLink;
 
       assert.deepEqual(options, expected);
     });

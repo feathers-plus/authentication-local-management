@@ -13,20 +13,24 @@ module.exports = {
   verifySignupWithShortToken,
 };
 
-async function verifySignupWithLongToken(options, verifyToken, authUser, provider) {
+async function verifySignupWithLongToken(options, verifyToken, notifierOptions, authUser, provider) {
   ensureValuesAreStrings(verifyToken);
 
-  return await verifySignup(options, { verifyToken }, { verifyToken }, authUser, provider);
+  return await verifySignup(
+    options, { verifyToken }, { verifyToken }, notifierOptions, authUser, provider
+  );
 }
 
-async function verifySignupWithShortToken(options, verifyShortToken, identifyUser, authUser, provider) {
+async function verifySignupWithShortToken(
+  options, verifyShortToken, identifyUser, notifierOptions, authUser, provider
+) {
   ensureValuesAreStrings(verifyShortToken);
   ensureObjPropsValid(identifyUser, options.identifyUserProps);
 
   return await verifySignup(options, identifyUser, { verifyShortToken }, authUser, provider);
 }
 
-async function verifySignup (options, query, tokens, authUser, provider) {
+async function verifySignup (options, query, tokens, notifierOptions, authUser, provider) {
   debug('verifySignup', query, tokens);
   const usersService = options.app.service(options.service);
   const usersServiceIdName = usersService.id;
@@ -44,7 +48,7 @@ async function verifySignup (options, query, tokens, authUser, provider) {
   }
 
   const user2 = await eraseVerifyProps(user1, user1.verifyExpires > Date.now(), user1.verifyChanges || {});
-  const user3 = await callNotifier(options, 'verifySignup', user2)
+  const user3 = await callNotifier(options, 'verifySignup', user2, notifierOptions)
   return options.sanitizeUserForClient(user3, options.passwordField);
 
   async function eraseVerifyProps (user, isVerified, verifyChanges) {

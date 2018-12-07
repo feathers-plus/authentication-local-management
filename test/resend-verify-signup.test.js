@@ -3,10 +3,10 @@ const assert = require('chai').assert;
 const feathers = require('@feathersjs/feathers');
 const feathersMemory = require('feathers-memory');
 const authLocalMgnt = require('../src/index');
-const SpyOn = require('./helpers/basic-spy');
 const { timeoutEachTest, maxTimeAllTests, defaultVerifyDelay } = require('./helpers/config');
 
 const now = Date.now();
+let stack;
 
 const makeUsersService = (options) => function (app) {
   app.use('/users', feathersMemory(options));
@@ -24,7 +24,7 @@ const users_Id = [
   { _id: 'c', email: 'c', isVerified: true, verifyToken: '999', verifyShortToken: '99900', verifyExpires: null }, // impossible
 ];
 
-['_id' , 'id'].forEach(idType => {
+['_id', 'id'].forEach(idType => {
   ['paginated', 'non-paginated'].forEach(pagination => {
     describe(`resend-verify-signup.test.js ${pagination} ${idType}`, function () {
       this.timeout(timeoutEachTest);
@@ -62,6 +62,8 @@ const users_Id = [
                 action: 'resendVerifySignup',
                 value: values[0]
               });
+
+              console.log('result=', result);
               const user = await usersService.get(result.id || result._id);
 
               assert.strictEqual(result.isVerified, false, 'result.isVerified not false');
@@ -379,10 +381,9 @@ const users_Id = [
         let authLocalMgntService;
         let db;
         let result;
-        let spyNotifier;
 
         beforeEach(async () => {
-          spyNotifier = new SpyOn(notifier);
+          stack = [];
 
           app = feathers();
           app.configure(makeUsersService({ id: idType, paginate: pagination === 'paginated' }));
@@ -390,7 +391,7 @@ const users_Id = [
             longTokenLen: 15, // need to reset this
             shortTokenLen: 6, // need to reset this
             shortTokenDigits: true, // need to reset this
-            notifier: spyNotifier.callWith
+            notifier,
           }));
           app.setup();
           authLocalMgntService = app.service('authManagement');
@@ -422,7 +423,7 @@ const users_Id = [
             aboutEqualDateTime(user.verifyExpires, makeDateTime());
 
             assert.deepEqual(
-              spyNotifier.result()[0].args, [
+              stack[0].args, [
                 'resendVerifySignup',
                 sanitizeUserForEmail(user),
                 { transport: 'email' }
@@ -439,8 +440,14 @@ const users_Id = [
 
 // Helpers
 
-async function notifier(action, user, notifierOptions, newEmail) {
-  return user;
+function notifier(app, options) {
+  return async (...args) => {
+    const [ type, sanitizedUser, notifierOptions ] = args;
+
+    stack.push({ args: clone(args), result: sanitizedUser });
+
+    return sanitizedUser
+  }
 }
 
 function makeDateTime(options1) {

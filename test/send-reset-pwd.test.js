@@ -3,20 +3,20 @@ const assert = require('chai').assert;
 const feathers = require('@feathersjs/feathers');
 const feathersMemory = require('feathers-memory');
 const authLocalMgnt = require('../src/index');
-const SpyOn = require('./helpers/basic-spy');
-const { hashPasswordAndTokens } = require('./helpers/hash-password-and-tokens-fake');
+const { hashPassword } = require('@feathersjs/authentication-local').hooks;
 const { timeoutEachTest, maxTimeAllTests } = require('./helpers/config');
 
 const now = Date.now();
 const timeout = timeoutEachTest;
+let stack;
 
 const makeUsersService = (options) => function (app) {
   app.use('/users', feathersMemory(options));
 
   app.service('users').hooks({
     before: {
-      create: hashPasswordAndTokens(),
-      patch: hashPasswordAndTokens(),
+      create: hashPassword(),
+      patch: hashPassword(),
     }
   });
 };
@@ -41,7 +41,6 @@ const users_Id = [
         let usersService;
         let authLocalMgntService;
         let db;
-        let result;
 
         beforeEach(async () => {
           app = feathers();
@@ -59,23 +58,25 @@ const users_Id = [
         });
 
         it('updates verified user', async function () {
-          try {
-            result = await authLocalMgntService.create({
-              action: 'sendResetPwd',
-              value: { email: 'b' }
-            });
-            const user = await usersService.get(result.id || result._id);
-            assert.strictEqual(result.isVerified, true, 'user.isVerified not true');
+          this.timeout(10000); // ensure its not a timeout issue ????????????????????????????????????????????
 
-            assert.strictEqual(user.isVerified, true, 'isVerified not true');
-            assert.isString(user.resetToken, 'resetToken not String');
-            assert.equal(user.resetToken.length, 36, 'reset token wrong length');
-            assert.equal(user.resetShortToken.length, 8, 'reset short token wrong length');
-            aboutEqualDateTime(user.resetExpires, makeDateTime());
-          } catch (err) {
-            console.log(err);
-            assert(false, 'err code set');
-          }
+          console.log('\n>.test before');
+
+          const result = await authLocalMgntService.create({ // This returns without everything being resolved ?????
+            action: 'sendResetPwd',
+            value: { email: 'b' }
+          });
+
+          console.log('\n<.test after', result);
+
+          const user = await usersService.get(result.id || result._id); // Causing this to fail ??????????????
+          assert.strictEqual(result.isVerified, true, 'user.isVerified not true');
+
+          assert.strictEqual(user.isVerified, true, 'isVerified not true');
+          assert.isString(user.resetToken, 'resetToken not String');
+          assert.equal(user.resetToken.length, 34, 'reset token wrong length');
+          assert.equal(user.resetShortToken.length, 6, 'reset short token wrong length');
+          aboutEqualDateTime(user.resetExpires, makeDateTime());
         });
 
         it('error on unverified user', async function () {
@@ -160,8 +161,8 @@ const users_Id = [
 
             assert.strictEqual(user.isVerified, true, 'isVerified not true');
             assert.isString(user.resetToken, 'resetToken not String');
-            assert.equal(user.resetToken.length, 26, 'reset token wrong length');
-            assert.equal(user.resetShortToken.length, 11, 'reset short token wrong length');
+            assert.equal(user.resetToken.length, 24, 'reset token wrong length');
+            assert.equal(user.resetShortToken.length, 9, 'reset short token wrong length');
             aboutEqualDateTime(user.resetExpires, makeDateTime());
           } catch (err) {
             console.log(err);
@@ -206,8 +207,8 @@ const users_Id = [
 
             assert.strictEqual(user.isVerified, true, 'isVerified not true');
             assert.isString(user.resetToken, 'resetToken not String');
-            assert.equal(user.resetToken.length, 26, 'reset token wrong length');
-            assert.equal(user.resetShortToken.length, 11, 'reset short token wrong length');
+            assert.equal(user.resetToken.length, 24, 'reset token wrong length');
+            assert.equal(user.resetShortToken.length, 9, 'reset short token wrong length');
             aboutEqualDateTime(user.resetExpires, makeDateTime());
           } catch (err) {
             console.log(err);
@@ -222,10 +223,9 @@ const users_Id = [
         let authLocalMgntService;
         let db;
         let result;
-        let spyNotifier;
 
         beforeEach(async () => {
-          spyNotifier = new SpyOn(notifier);
+          stack = [];
 
           app = feathers();
           app.configure(makeUsersService({ id: idType, paginate: pagination === 'paginated' }));
@@ -233,7 +233,7 @@ const users_Id = [
             longTokenLen: 15,
             shortTokenLen: 6,
             shortTokenDigits: true,
-            notifier: spyNotifier.callWith,
+            notifier,
           }));
           app.setup();
           authLocalMgntService = app.service('authManagement');
@@ -257,10 +257,10 @@ const users_Id = [
 
             assert.strictEqual(user.isVerified, true, 'isVerified not true');
             assert.isString(user.resetToken, 'resetToken not String');
-            assert.equal(user.resetToken.length, 36, 'reset token wrong length');
+            assert.equal(user.resetToken.length, 34, 'reset token wrong length');
             aboutEqualDateTime(user.resetExpires, makeDateTime());
 
-            const expected = spyNotifier.result()[0].args
+            const expected = stack[0].args
             expected[1] = Object.assign({}, expected[1], {
               resetToken: user.resetToken,
               resetShortToken: user.resetShortToken
@@ -284,8 +284,14 @@ const users_Id = [
 
 // Helpers
 
-async function notifier(action, user, notifierOptions, newEmail) {
-  return user;
+function notifier(app, options) {
+  return async (...args) => {
+    const [ type, sanitizedUser, notifierOptions ] = args;
+
+    stack.push({ args: clone(args), result: sanitizedUser });
+
+    return sanitizedUser
+  }
 }
 
 function makeDateTime(options1) {

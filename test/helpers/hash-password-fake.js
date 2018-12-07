@@ -1,26 +1,21 @@
 
 module.exports = {
-  hashPasswordAndTokens,
+  hashPassword,
   bcryptCompare,
   bcryptCompareSync
 };
 
-function hashPasswordAndTokens (password, verifyToken, resetToken, resetShortToken) {
+function hashPassword (password = 'password') {
   return async (context) => {
     const data = Array.isArray(context.data) ? context.data : [context.data];
     const props = [
       password || 'password',
-      verifyToken || 'verifyToken',
-      resetToken || 'resetToken',
-      resetShortToken || 'resetShortToken'
     ];
 
     data.forEach(rec => {
-      props.forEach(name => {
-        if (name in rec && rec[name] !== null && rec[name] !== undefined) {
-          rec[name] = `__${rec[name]}`;
-        }
-      });
+      if (password in rec && rec[password] !== null && rec[password] !== undefined) {
+        rec[password] = `__${rec[password]}`;
+      }
     });
 
     return context;

@@ -3,13 +3,11 @@ const bcrypt = require('bcryptjs');
 const errors = require('@feathersjs/errors');
 const makeDebug = require('debug');
 const merge = require('lodash.merge');
-const Plugins = require('../../plugin-scaffolding/src');
 const { authenticate } = require('@feathersjs/authentication').hooks;
 const checkUnique = require('./check-unique');
 const identityChange = require('./identity-change');
 const passwordChange = require('./password-change');
 const resendVerifySignup = require('./resend-verify-signup');
-const defaultPlugins = require('./default-plugins');
 const sanitizeUserForClient = require('./helpers/sanitize-user-for-client');
 const sendResetPwd = require('./send-reset-pwd');
 const { resetPwdWithLongToken, resetPwdWithShortToken } = require('./reset-password');
@@ -25,12 +23,10 @@ const optionsDefault = {
   dialablePhoneField: 'dialablePhone',
   passwordField: 'password', //  Overridden by config/default.json.
   notifier: (app, options) => async (type, sanitizedUser, notifierOptions) => {
-    // console.log('a-l-m default notifier called', type, sanitizedUser, notifierOptions);
+    console.log('a-l-m default notifier called', type, sanitizedUser, notifierOptions);
   },
   buildEmailLink,
-  // Token's length will be twice longTokenLen by default.
-  // The token for sendResetPwd will be twice LongTokenLen + length of (id || _id) + 3
-  longTokenLen: 15,
+  longTokenLen: 15, // Token's length will be twice this by default.
   shortTokenLen: 6,
   shortTokenDigits: true,
   resetDelay: 1000 * 60 * 60 * 2, // 2 hours
@@ -111,9 +107,7 @@ const  optionsCustomizeCalls = {
       await usersService.patch(id, data, params),
   },
   sendResetPwd: {
-    find: async (usersService, params = {}) => {
-      return await usersService.find(params);
-    },
+    find: async (usersService, params = {}) => await usersService.find(params),
     patch: async (usersService, id, data, params = {}) =>
       await usersService.patch(id, data, params),
   },
@@ -129,7 +123,6 @@ module.exports = authenticationLocalManagement;
 
 function authenticationLocalManagement(options1 = {}) {
   debug('service being configured.');
-  let plugins;
 
   return function (app) {
     // Get defaults from config/default.json
@@ -142,45 +135,64 @@ function authenticationLocalManagement(options1 = {}) {
     options.customizeCalls = merge({}, optionsCustomizeCalls, options1.customizeCalls || {});
     options.notifier = options.notifier(app, options);
 
-    // Load default plugins
-    (async function() {
-      plugins = new Plugins({ options });
-      plugins.register(defaultPlugins);
-      await plugins.setup();
-    }());
-
     app.set('localManagement', options);
 
-    options.app.use(options.path, authLocalMgntMethods(options, plugins));
+    options.app.use(options.path, authLocalMgntMethods(options));
   };
 }
 
-function authLocalMgntMethods(options, plugins) {
+function authLocalMgntMethods(options) {
   return {
     async create (data) {
       debug(`create called. action=${data.action}`);
-      let results;
 
       try {
         switch (data.action) {
           case 'checkUnique':
-            return await plugins.run('checkUnique', data);
+            return await checkUnique(
+              options, data.value, data.ownId || null, data.meta || {},
+              data.authUser, data.provider
+              );
           case 'resendVerifySignup':
-            return await plugins.run('resendVerifySignup', data);
+            return await resendVerifySignup(
+              options, data.value, data.notifierOptions,
+              data.authUser, data.provider
+            );
           case 'verifySignupLong':
-            return await plugins.run('verifySignupLong', data);
+            return await verifySignupWithLongToken(
+              options, data.value, data.notifierOptions,
+              data.authUser, data.provider
+            );
           case 'verifySignupShort':
-            return await plugins.run('verifySignupShort', data);
+            return await verifySignupWithShortToken(
+              options, data.value.token, data.value.user, data.notifierOptions,
+              data.authUser, data.provider
+            );
           case 'sendResetPwd':
-            return await plugins.run('sendResetPwd', data);
+            return await sendResetPwd(
+              options, data.value, data.notifierOptions,
+              data.authUser, data.provider
+            );
           case 'resetPwdLong':
-            return await plugins.run('resetPwdLong', data);
+            return await resetPwdWithLongToken(
+              options, data.value.token, data.value.password, data.notifierOptions,
+              data.authUser, data.provider
+            );
           case 'resetPwdShort':
-            return await plugins.run('resetPwdShort', data);
+            return await resetPwdWithShortToken(
+              options, data.value.token, data.value.user, data.value.password, data.notifierOptions,
+              data.authUser, data.provider
+            );
           case 'passwordChange':
-            return await plugins.run('passwordChange', data);
+            return await passwordChange(
+              options, data.value.user, data.value.oldPassword, data.value.password, data.notifierOptions,
+              data.authUser, data.provider
+            );
           case 'identityChange':
-            return await plugins.run('identityChange', data);
+            return await identityChange(
+              options, data.value.user, data.value.password, data.value.changes, data.notifierOptions,
+              data.authUser, data.provider
+            );
           default:
             return Promise.reject(
               new errors.BadRequest(`Action '${data.action}' is invalid.`,

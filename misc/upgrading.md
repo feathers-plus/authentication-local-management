@@ -146,8 +146,43 @@ authentication-local-management$ sqlite3 ./testdata/users.sqlite3
 SQLite version 3.19.3 2017-06-08 14:26:16
 Enter ".help" for usage hints.
 sqlite> .schema
-sqlite> CREATE TABLE 'Users' ('id' INTEGER PRIMARY KEY AUTOINCREMENT, 'email' VARCHAR(60), 'password' VARCHAR(60), 'isVerified' INTEGER, 'verifyExpires' DATETIME, 'verifyToken' VARCHAR(60), 'verifyShortToken' VARCHAR(8), 'verifyChanges' VARCHAR(255), 'resetExpires' INTEGER, 'resetToken' VARCHAR(60), 'resetShortToken' VARCHAR(8));
+sqlite> CREATE TABLE 'Users' ('id' INTEGER PRIMARY KEY AUTOINCREMENT,
+  'email'            VARCHAR( 60),
+  'password'         VARCHAR( 60), 
+  'phone'            VARCHAR( 30),
+  'dialablePhone'    VARCHAR( 15),
+  'preferredComm'    VARCHAR(  5),
+  'isVerified'       INTEGER, 
+  'verifyExpires'    DATETIME, 
+  'verifyToken'      VARCHAR( 60),
+  'verifyShortToken' VARCHAR(  8), 
+  'verifyChanges'    VARCHAR(255), 
+  'resetExpires'     INTEGER, 
+  'resetToken'       VARCHAR( 60), 
+  'resetShortToken'  VARCHAR(  8)
+ );
 sqlite> 
+```
+
+Module users.sequelize.js much be customized to reflect the changes conversionSql makes:
+
+```js
+// !code: moduleExports
+{
+  isVerified: {
+    type: DataTypes.INTEGER,
+  },
+  verifyExpires: {
+    type: DataTypes.DATE,
+  },
+  verifyChange: {
+    type: DataTypes.STRING
+  },
+  resetExpires: {
+    type: DataTypes.DATE
+  },
+}
+// !end
 ```
 
 ### Customization of service calls
@@ -236,45 +271,7 @@ It now works correctly when context.data is an array.
 
 a-l-m is configured like this
 
-```js
-// src/app.js
-const localManagement = require('./local-management');
-
-// ...
-app.configure(middleware);
-app.configure(authentication);
-app.configure(localManagement);
-app.configure(services);
-app.configure(channels);
-///...
-```
-
-```js
-// src/local-management.js
-const localManagement = require('authentication-local-management');
-const { localManagementHook } = require('authentication-local-management/src/hooks');
-
-let moduleExports = function (app) {
-  const config = {
-    // ...
-  };
-
-  // Set up authentication-local-management with its options
-  localManagement(config)(app);
-  
-  // app.get('localManagement') contains the expanded configuration options.
-
-  // Setup hooks
-  app.service(config.path || 'authManagement').hooks({
-    before: {
-      create: localManagementHook(app.get('actionsNoAuth')),
-    },
-  });
-};
-
-// !code: exports // !end
-module.exports = moduleExports;
-```
+??????????????????? todo
 
 ### cli+ JSON-schema for user-entity
 
@@ -286,7 +283,10 @@ If you are using the cli+ generator, the user entity's JSON-schema could be defi
     /* eslint-disable */
     _id:              { type: 'ID' },
     email:            { type: 'string',  minLength:  8, maxLength: 40, faker: 'internet.email'           },
-    password:         { type: 'string',  minLength:  4, maxLength: 30 },
+    password:         { type: 'string',  minLength:  4, maxLength: 30                                    },
+    phone:            { type: 'string',  minLength:  7, maxLength: 30, faker: { 'phone.phoneNumber': '(###) ###-####' } },
+    dialablePhone:    { type: 'string',  minLength:  7, maxLength: 15, faker: { 'phone.phoneNumber': '+1##########'     } },
+    preferredComm:    { type: 'string',  enum: ['email', 'phone']                                        },
     isVerified:       { type: 'boolean' },
     verifyExpires:    { type: 'integer',                               faker: { exp: 'Date.now() +  5' } },
     verifyToken:      { type: 'string',  minLength: 30, maxLength: 30, faker: { exp: 'null'            } },
@@ -302,26 +302,45 @@ If you are using the cli+ generator, the user entity's JSON-schema could be defi
 
 For Mongoose
 ```js
-// need email, etc ?????????????????????????????????????????????????????????????????????
-isVerified: { type: Boolean },
-verifyToken: { type: String },
-verifyExpires: { type: Date },
-verifyChanges: { type: Object },
-resetToken: { type: String },
-resetExpires: { type: Date }
+email:         { type: String  },
+password:      { type: String  },
+phone:         { type: String  },
+dialablePhone: { type: String  },
+preferredComm: { type: String, enum: ['email', 'phone'] },
+isVerified:    { type: Boolean },
+verifyToken:   { type: String  },
+verifyExpires: { type: Date    },
+verifyChanges: { type: Object  },
+resetToken:    { type: String  },
+resetExpires:  { type: Date    }
 ```
 
 For Sequelize (duplicate)
 The test/sequelize.test.js module uses the feathers-sequelize adapter with an sqlite3 table created with
 ```txt
-// need to add phone, etc ?????????????????????????????????????????????????????
-authentication-local-management$ sqlite3 ./testdata/users.sqlite3
+$ sqlite3 ./testdata/users.sqlite3
 SQLite version 3.19.3 2017-06-08 14:26:16
 Enter ".help" for usage hints.
 sqlite> .schema
-sqlite> CREATE TABLE 'Users' ('id' INTEGER PRIMARY KEY AUTOINCREMENT, 'email' VARCHAR(60), 'password' VARCHAR(60), 'isVerified' INTEGER, 'verifyExpires' DATETIME, 'verifyToken' VARCHAR(60), 'verifyShortToken' VARCHAR(8), 'verifyChanges' VARCHAR(255), 'resetExpires' INTEGER, 'resetToken' VARCHAR(60), 'resetShortToken' VARCHAR(8));
+sqlite> CREATE TABLE 'Users' ('id' INTEGER PRIMARY KEY AUTOINCREMENT,
+  'email'            VARCHAR( 60),
+  'password'         VARCHAR( 60), 
+  'phone'            VARCHAR( 30),
+  'dialablePhone'    VARCHAR( 15),
+  'preferredComm'    VARCHAR(  5),
+  'isVerified'       INTEGER, 
+  'verifyExpires'    DATETIME, 
+  'verifyToken'      VARCHAR( 60),
+  'verifyShortToken' VARCHAR(  8), 
+  'verifyChanges'    VARCHAR(255), 
+  'resetExpires'     INTEGER, 
+  'resetToken'       VARCHAR( 60), 
+  'resetShortToken'  VARCHAR(  8)
+);
 sqlite> 
 ```
+
+
 
 ### Hooks for the user-entity
 
@@ -452,37 +471,8 @@ client.logout();
 
 ## Things added
 
-- phone fields
-```txt
-    phone:            { type: 'string',  minLength:  7, maxLength: 40, faker: 'phone.phoneNumber'        },
-    searchablePhone:  { type: 'string',  minLength:  7, maxLength: 40, faker: { exp: 'rec.phone.match(/\\d+/g).join("")' } },
-    preferContact:    { enum: [ 'email', 'phone' ] },
-```
-
-- user hooks
-    - update: disallow('external')
-    - patch: iff(isProvider('external'), preventChanges(...localManagementFields)),
-    
-- option.emailLink added
-
-- options.notifier signature changed
-```js
-// from
-(type, sanitizedUser, notifierOptions) => {}
-
-// to
-(app) => (type, sanitizedUser, notifierOptions) => {}
-```
-
-- preventChangesVerification needs proper default identifyUserProps
-
 - ???? do we need a language field for i18n?
 
-- option.buildEmailLink ????? may want buildEmailLinkActionToVerb
-- hook to protect verification fields from change by client. partially in users.hooks.js
+- WhatsApp as alternative to phone
 
-- callNotifier called by: sendVerifySignup (hook), resendVerifySignup, verifySignupLong, verifySignupShort,
-sendResetPwd, resetPwdLong, resetPwdShort, passwordChange, identityChange.
-It is NOT called by: checkUnique. 
-
-- Only resendVerifySignup and sendResetPwd pass data.notifierOptions. Should all have it ????????????????????????????????????????
+- Have multiple passwords, e.g. pin number

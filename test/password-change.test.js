@@ -4,17 +4,18 @@ const bcrypt = require('bcryptjs');
 const feathers = require('@feathersjs/feathers');
 const feathersMemory = require('feathers-memory');
 const authLocalMgnt = require('../src/index');
-const SpyOn = require('./helpers/basic-spy');
-const { hashPasswordAndTokens, bcryptCompare,  bcryptCompareSync } = require('./helpers/hash-password-and-tokens-fake');
+const { hashPassword, bcryptCompare,  bcryptCompareSync } = require('./helpers/hash-password-fake');
 const { timeoutEachTest } = require('./helpers/config');
+
+let stack;
 
 const makeUsersService = (options) => function (app) {
   app.use('/users', feathersMemory(options));
 
   app.service('users').hooks({
     before: {
-      create: hashPasswordAndTokens(),
-      patch: hashPasswordAndTokens(),
+      create: hashPassword(),
+      patch: hashPassword(),
     }
   });
 };
@@ -132,8 +133,6 @@ describe('password-change.test.js', function () {
         });
 
         describe('with notification', () => {
-          let spyNotifier;
-
           let app;
           let usersService;
           let authLocalMgntService;
@@ -141,12 +140,12 @@ describe('password-change.test.js', function () {
           let result;
 
           beforeEach(async () => {
-            spyNotifier = new SpyOn(notifier);
+            stack = [];
 
             app = feathers();
             app.configure(makeUsersService({ id: idType, paginate: pagination === 'paginated' }));
             app.configure(authLocalMgnt({
-              notifier: spyNotifier.callWith,
+              notifier,
               bcryptCompare,
             }));
             app.setup();
@@ -177,7 +176,7 @@ describe('password-change.test.js', function () {
               assert.strictEqual(result.isVerified, true, 'isVerified not true');
               assert.isOk(bcryptCompareSync(user.plainNewPassword, user.password), `[1`);
               assert.deepEqual(
-                spyNotifier.result()[0].args,
+                stack[0].args,
                 [
                   'passwordChange',
                   sanitizeUserForEmail(user),
@@ -196,8 +195,14 @@ describe('password-change.test.js', function () {
 
 // Helpers
 
-async function notifier(action, user, notifierOptions, newEmail) {
-  return user;
+function notifier(app, options) {
+  return async (...args) => {
+    const [ type, sanitizedUser, notifierOptions ] = args;
+
+    stack.push({ args: clone(args), result: sanitizedUser });
+
+    return sanitizedUser
+  }
 }
 
 function sanitizeUserForEmail(user) {

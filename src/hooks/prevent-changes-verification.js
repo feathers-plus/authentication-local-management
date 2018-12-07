@@ -5,11 +5,11 @@ const { checkContext } = require('feathers-hooks-common');
 module.exports = preventChangesVerification;
 
 function preventChangesVerification(preventWhen, identifyUserProps, verificationFields) {
-  preventWhen = preventWhen || (context => !!context.params.provider);
+  preventWhen = preventWhen || (context => !!context.params.provider); // no-op on server calls
 
   verificationFields = verificationFields || [
-    'isVerified', 'verifyExpires', 'verifyToken', 'verifyShortToken', 'verifyChange',
-    'resetExpires', 'resetToken', 'resetShortToken',
+    'isVerified', 'verifyExpires', 'verifyToken', 'verifyShortToken', 'verifyChanges',
+    'resetExpires', 'resetToken', 'resetShortToken', 'preferredComm'
   ];
 
   return context => {
@@ -20,10 +20,10 @@ function preventChangesVerification(preventWhen, identifyUserProps, verification
     if (preventWhen(context)) {
       const data = context.data;
       const options = context.app.get('localManagement');
-      const fields = [].concat(
-        identifyUserProps || (options || {}).identifyUserProps,
-        verificationFields
-      );
+      const identifyProps = identifyUserProps ||
+        (options || {}).identifyUserProps || ['email', 'dialablePhone'];
+
+      const fields = [].concat(identifyProps, verificationFields);
 
       fields.forEach(name => {
         if (name in data && data[name] !== undefined) {

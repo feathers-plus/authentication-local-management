@@ -15,11 +15,14 @@ async function sendResetPwd (options, identifyUser, notifierOptions, authUser, p
   debug('sendResetPwd');
   const usersService = options.app.service(options.service);
   const usersServiceIdName = usersService.id;
+  debug('id', usersService.id);
 
   ensureObjPropsValid(identifyUser, options.identifyUserProps);
 
+  //const users = await usersService.find({ query: identifyUser, provider });
   const users = await options.customizeCalls.sendResetPwd
-    .find(usersService, { query: identifyUser }, provider);
+    .find(usersService, { query: identifyUser, provider });
+
   const user1 = getUserData(users,  options.skipIsVerifiedCheck ? [] : ['isVerified']);
 
   const user2 = Object.assign(user1, {
@@ -31,7 +34,7 @@ async function sendResetPwd (options, identifyUser, notifierOptions, authUser, p
     resetShortToken: await getShortToken(options.shortTokenLen, options.shortTokenDigits),
   });
 
-  callNotifier(options, 'sendResetPwd', user2, notifierOptions)
+  await callNotifier(options, 'sendResetPwd', user2, notifierOptions)
 
   const user3 = await options.customizeCalls.sendResetPwd
     .patch(usersService, user2[usersServiceIdName], {

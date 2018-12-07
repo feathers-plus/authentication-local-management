@@ -3,7 +3,7 @@ const callNotifier = require('../helpers/call-notifier');
 
 module.exports = sendVerifySignupNotification;
 
-function sendVerifySignupNotification(notifyWhen, notifierOptions1) {
+function sendVerifySignupNotification(notifierOptions1, notifyWhen) {
   notifyWhen = notifyWhen || (context => !!context.params.provider);
 
   const notifierOptions = typeof notifierOptions1 === 'function' ?
@@ -13,7 +13,7 @@ function sendVerifySignupNotification(notifyWhen, notifierOptions1) {
     if (notifyWhen(context)) {
       const options = context.app.get('localManagement');
 
-      await callNotifier(options, 'sendVerifySignup', context.result, notifierOptions);
+      await callNotifier(options, 'sendVerifySignup', context.result, notifierOptions());
     }
   };
 }

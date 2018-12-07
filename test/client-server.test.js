@@ -4,7 +4,6 @@ const bcrypt = require('bcryptjs');
 const feathers = require('@feathersjs/feathers');
 const feathersMemory = require('feathers-memory');
 const authLocalMgnt = require('../src/index');
-const SpyOn = require('./helpers/basic-spy');
 const { localManagementHook } = require('../src/hooks/index');
 const { timeoutEachTest } = require('./helpers/config');
 

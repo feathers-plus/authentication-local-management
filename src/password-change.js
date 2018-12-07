@@ -12,7 +12,10 @@ const debug = makeDebug('authLocalMgnt:passwordChange');
 
 module.exports = passwordChange;
 
-async function passwordChange (options, identifyUser, oldPassword, password, authUser, provider) {
+async function passwordChange (
+  options, identifyUser, oldPassword, password, notifierOptions, authUser, provider
+) {
+  console.log('\npasswordChange', notifierOptions);
   debug('passwordChange', oldPassword, password);
   const usersService = options.app.service(options.service);
   const usersServiceIdName = usersService.id;
@@ -41,6 +44,6 @@ async function passwordChange (options, identifyUser, oldPassword, password, aut
   const user2 = await options.customizeCalls.passwordChange
     .patch(usersService, user1[usersServiceIdName], { [options.passwordField]: password });
 
-  const user3 = await callNotifier(options, 'passwordChange', user2);
+  const user3 = await callNotifier(options, 'passwordChange', user2, notifierOptions);
   return options.sanitizeUserForClient(user3, options.passwordField);
 }

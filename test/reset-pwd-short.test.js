@@ -3,24 +3,23 @@ const assert = require('chai').assert;
 const feathers = require('@feathersjs/feathers');
 const feathersMemory = require('feathers-memory');
 const authLocalMgnt = require('../src/index');
-const SpyOn = require('./helpers/basic-spy');
-const { hashPasswordAndTokens } = require('./helpers/hash-password-and-tokens-fake');
+const { hashPassword } = require('./helpers/hash-password-fake');
 const { timeoutEachTest, maxTimeAllTests } = require('./helpers/config');
 
 const now = Date.now();
+let stack;
 
 const makeUsersService = (options) => function (app) {
   app.use('/users', feathersMemory(options));
 
   app.service('users').hooks({
     before: {
-      create: hashPasswordAndTokens(),
-      patch: hashPasswordAndTokens(),
+      create: hashPassword(),
+      patch: hashPassword(),
     }
   });
 };
 
-const fieldToHash = 'resetShortToken';
 const users_Id = [
   // The added time interval must be longer than it takes to run ALL the tests
   { _id: 'a', email: 'a', username: 'aa', isVerified: true, resetToken: '000', resetShortToken: '00099', resetExpires: now + maxTimeAllTests },
@@ -267,6 +266,8 @@ const usersId = [
       });
 
       describe('with notification', () => {
+
+        stach = [];
         let app;
         let usersService;
         let authLocalMgntService;
@@ -275,13 +276,13 @@ const usersId = [
         let spyNotifier;
 
         beforeEach(async () => {
-          spyNotifier = new SpyOn(notifier);
+          stack = [];
 
           app = feathers();
           app.configure(makeUsersService({ id: idType, paginate: pagination === 'paginated' }));
           app.configure(authLocalMgnt({
             // maybe reset identifyUserProps
-            notifier: spyNotifier.callWith,
+            notifier,
             testMode: true
           }));
           app.setup();
@@ -318,7 +319,7 @@ const usersId = [
             assert.isAbove(hash.length, 6, 'hash wrong length');
 
             assert.deepEqual(
-              spyNotifier.result()[0].args,
+              stack[0].args,
               [
                 'resetPwd',
                 Object.assign({}, sanitizeUserForEmail(user)),
@@ -336,8 +337,14 @@ const usersId = [
 
 // Helpers
 
-async function notifier(action, user, notifierOptions, newEmail) {
-  return user;
+function notifier(app, options) {
+  return async (...args) => {
+    const [ type, sanitizedUser, notifierOptions ] = args;
+
+    stack.push({ args: clone(args), result: sanitizedUser });
+
+    return sanitizedUser
+  }
 }
 
 function sanitizeUserForEmail(user) {

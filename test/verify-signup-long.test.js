@@ -3,10 +3,10 @@ const assert = require('chai').assert;
 const feathers = require('@feathersjs/feathers');
 const feathersMemory = require('feathers-memory');
 const authLocalMgnt = require('../src/index');
-const SpyOn = require('./helpers/basic-spy');
 const { timeoutEachTest, maxTimeAllTests } = require('./helpers/config');
 
 const now = Date.now();
+let stack;
 
 const makeUsersService = (options) => function (app) {
   app.use('/users', feathersMemory(options));
@@ -63,6 +63,7 @@ const users_Id = [
               action: 'verifySignupLong',
               value: '000',
             });
+            console.log('result=', result);
             const user = await usersService.get(result.id || result._id);
 
             assert.strictEqual(result.isVerified, true, 'user.isVerified not true');
@@ -74,7 +75,7 @@ const users_Id = [
             assert.deepEqual(user.verifyChanges, {}, 'verifyChanges not empty object');
           } catch (err) {
             console.log(err);
-            assert(false, 'err code set');
+            assert(false, 'err code set' + err.message);
           }
         });
 
@@ -172,15 +173,15 @@ const users_Id = [
         let authLocalMgntService;
         let db;
         let result;
-        let spyNotifier;
 
         beforeEach(async () => {
-          spyNotifier = new SpyOn(notifier);
+          stack = [];
 
           app = feathers();
           app.configure(makeUsersService({ id: idType, paginate: pagination === 'paginated' }));
           app.configure(authLocalMgnt({
-            notifier: spyNotifier.callWith, testMode: true
+            notifier,
+            testMode: true
           }));
           app.setup();
           authLocalMgntService = app.service('authManagement');
@@ -205,7 +206,7 @@ const users_Id = [
             assert.strictEqual(user.verifyToken, null, 'verifyToken not null');
             assert.strictEqual(user.verifyExpires, null, 'verifyExpires not null');
 
-            assert.deepEqual(spyNotifier.result()[0].args, [
+            assert.deepEqual(stack[0].args, [
               'verifySignup',
               Object.assign({}, sanitizeUserForEmail(user)),
               {}
@@ -222,8 +223,14 @@ const users_Id = [
 
 // Helpers
 
-async function notifier(action, user, notifierOptions, newEmail) {
-  return user;
+function notifier(app, options) {
+  return async (...args) => {
+    const [ type, sanitizedUser, notifierOptions ] = args;
+
+    stack.push({ args: clone(args), result: sanitizedUser });
+
+    return sanitizedUser
+  }
 }
 
 function sanitizeUserForEmail(user) {
