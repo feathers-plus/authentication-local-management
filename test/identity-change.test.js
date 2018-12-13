@@ -3,7 +3,7 @@ const assert = require('chai').assert;
 const feathers = require('@feathersjs/feathers');
 const feathersMemory = require('feathers-memory');
 const authLocalMgnt = require('../src/index');
-const { hashPassword, bcryptCompare } = require('./helpers/hash-password-fake');
+const { hashPasswordFake: { hashPassword, bcryptCompare } } = require('@feathers-plus/commons');
 const { timeoutEachTest } = require('./helpers/config');
 
 let stack;

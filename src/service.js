@@ -9,13 +9,14 @@ const checkUnique = require('./check-unique');
 const identityChange = require('./identity-change');
 const passwordChange = require('./password-change');
 const resendVerifySignup = require('./resend-verify-signup');
-const defaultPlugins = require('./default-plugins');
+const pluginsDefault = require('./plugins-default');
 const sanitizeUserForClient = require('./helpers/sanitize-user-for-client');
 const sendResetPwd = require('./send-reset-pwd');
 const { resetPwdWithLongToken, resetPwdWithShortToken } = require('./reset-password');
 const { verifySignupWithLongToken, verifySignupWithShortToken } = require('./verify-signup');
 
 const debug = makeDebug('authLocalMgnt:service');
+let plugins;
 
 const optionsDefault = {
   app: null, // Value set during configuration.
@@ -43,21 +44,7 @@ const optionsDefault = {
   ownAcctOnly: true,
   sanitizeUserForClient,
   bcryptCompare: bcrypt.compare,
-  catchErr: (err, options, data) => {
-    return Promise.reject(err); // support both async and Promise interfaces
-  },
-  customizeCalls: null, // Value set during configuration.
 };
-
-/* Call options.customizeCalls using
-const users = await options.customizeCalls.identityChange
-  .find(usersService, { query: identifyUser });
-
-const user2 = await options.customizeCalls.identityChange
-  .patch(usersService, user1[usersServiceIdName], {
-
-});
-*/
 
 function buildEmailLink(app, actionToVerb) {
   const isProd = process.env.NODE_ENV === 'production';
@@ -77,59 +64,10 @@ function buildEmailLink(app, actionToVerb) {
   };
 }
 
-const  optionsCustomizeCalls = {
-  checkUnique: {
-    find: async (usersService, params = {}) =>
-      await usersService.find(params),
-  },
-  identityChange: {
-    find: async (usersService, params = {}) =>
-      await usersService.find(params),
-    patch: async (usersService, id, data, params = {}) =>
-      await usersService.patch(id, data, params),
-  },
-  passwordChange: {
-    find: async (usersService, params = {}) =>
-      await usersService.find(params),
-    patch: async (usersService, id, data, params = {}) =>
-      await usersService.patch(id, data, params),
-  },
-  resendVerifySignup: {
-    find: async (usersService, params = {}) =>
-      await usersService.find(params),
-    patch: async (usersService, id, data, params = {}) =>
-      await usersService.patch(id, data, params),
-  },
-  resetPassword: {
-    resetTokenGet: async (usersService, id, params) =>
-      await usersService.get(id, params),
-    resetShortTokenFind: async (usersService, params = {}) =>
-      await usersService.find(params),
-    badTokenpatch: async (usersService, id, data, params = {}) =>
-      await usersService.patch(id, data, params),
-    patch: async (usersService, id, data, params = {}) =>
-      await usersService.patch(id, data, params),
-  },
-  sendResetPwd: {
-    find: async (usersService, params = {}) => {
-      return await usersService.find(params);
-    },
-    patch: async (usersService, id, data, params = {}) =>
-      await usersService.patch(id, data, params),
-  },
-  verifySignup: {
-    find: async (usersService, params = {}) =>
-      await usersService.find(params),
-    patch: async (usersService, id, data, params = {}) =>
-      await usersService.patch(id, data, params),
-  },
-};
-
 module.exports = authenticationLocalManagement;
 
 function authenticationLocalManagement(options1 = {}) {
   debug('service being configured.');
-  let plugins;
 
   return function (app) {
     // Get defaults from config/default.json
@@ -139,13 +77,13 @@ function authenticationLocalManagement(options1 = {}) {
       (authOptions.local || {}).passwordField || optionsDefault.passwordField;
 
     let options = Object.assign({}, optionsDefault, options1, { app });
-    options.customizeCalls = merge({}, optionsCustomizeCalls, options1.customizeCalls || {});
+    //options.customizeCalls = merge({}, optionsCustomizeCalls, options1.customizeCalls || {});
     options.notifier = options.notifier(app, options);
 
-    // Load default plugins
+    // Load plugins
+    plugins = new Plugins({ options });
+    plugins.register(pluginsDefault);
     (async function() {
-      plugins = new Plugins({ options });
-      plugins.register(defaultPlugins);
       await plugins.setup();
     }());
 
@@ -158,38 +96,21 @@ function authenticationLocalManagement(options1 = {}) {
 function authLocalMgntMethods(options, plugins) {
   return {
     async create (data) {
-      debug(`create called. action=${data.action}`);
-      let results;
+      const trigger = data.action;
+      debug(`create called. trigger=${trigger}`);
+
+      if (!plugins.has(trigger)) {
+        return Promise.reject(
+          new errors.BadRequest(`Action '${trigger}' is invalid.`,
+            { errors: { $className: 'badParams' } }
+          )
+        );
+      }
 
       try {
-        switch (data.action) {
-          case 'checkUnique':
-            return await plugins.run('checkUnique', data);
-          case 'resendVerifySignup':
-            return await plugins.run('resendVerifySignup', data);
-          case 'verifySignupLong':
-            return await plugins.run('verifySignupLong', data);
-          case 'verifySignupShort':
-            return await plugins.run('verifySignupShort', data);
-          case 'sendResetPwd':
-            return await plugins.run('sendResetPwd', data);
-          case 'resetPwdLong':
-            return await plugins.run('resetPwdLong', data);
-          case 'resetPwdShort':
-            return await plugins.run('resetPwdShort', data);
-          case 'passwordChange':
-            return await plugins.run('passwordChange', data);
-          case 'identityChange':
-            return await plugins.run('identityChange', data);
-          default:
-            return Promise.reject(
-              new errors.BadRequest(`Action '${data.action}' is invalid.`,
-                { errors: { $className: 'badParams' } }
-              )
-            );
-        }
+        return await plugins.run(trigger, data);
       } catch (err) {
-        return options.catchErr(err, options, data);
+        return await plugins.run('catchError', err);
       }
     }
   }

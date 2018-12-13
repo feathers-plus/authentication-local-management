@@ -63,7 +63,6 @@ const users_Id = [
                 value: values[0]
               });
 
-              console.log('result=', result);
               const user = await usersService.get(result.id || result._id);
 
               assert.strictEqual(result.isVerified, false, 'result.isVerified not false');

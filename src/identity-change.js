@@ -1,20 +1,18 @@
 
 const errors = require('@feathersjs/errors');
 const makeDebug = require('debug');
-const comparePasswords = require('./helpers/compare-passwords');
 const ensureObjPropsValid = require('./helpers/ensure-obj-props-valid');
-const getId = require('./helpers/get-id');
-const getLongToken = require('./helpers/get-long-token');
-const getShortToken = require('./helpers/get-short-token');
 const getUserData = require('./helpers/get-user-data');
 const callNotifier = require('./helpers/call-notifier');
+const { comparePasswords, getId, getLongToken, getShortToken } = require('@feathers-plus/commons');
 
 const debug = makeDebug('authLocalMgnt:identityChange');
 
 module.exports = identityChange;
 
 async function identityChange (
-  options, identifyUser, password, changesIdentifyUser, notifierOptions, authUser, provider
+  { options, plugins }, identifyUser, password, changesIdentifyUser, notifierOptions,
+  authUser, provider
 ) {
   // note this call does not update the authenticated user info in hooks.params.user.
   debug('identityChange', password, changesIdentifyUser);
@@ -24,8 +22,11 @@ async function identityChange (
   ensureObjPropsValid(identifyUser, options.identifyUserProps);
   ensureObjPropsValid(changesIdentifyUser, options.identifyUserProps);
 
-  const users = await options.customizeCalls.identityChange
-    .find(usersService, { query: identifyUser });
+  const users = await plugins.run('identityChange.find', {
+    usersService,
+    params: { query: identifyUser },
+  });
+
   const user1 = getUserData(users);
 
   if (options.ownAcctOnly && authUser && (getId(authUser) !== getId(user1))) {
@@ -42,14 +43,18 @@ async function identityChange (
     );
   }
 
-  const user2 = await options.customizeCalls.identityChange
-    .patch(usersService, user1[usersServiceIdName], {
+  const user2 = await plugins.run('identityChange.patch', {
+    usersService,
+    id: user1[usersServiceIdName],
+    data: {
       verifyExpires: Date.now() + options.delay,
       verifyToken: await getLongToken(options.longTokenLen),
       verifyShortToken: await getShortToken(options.shortTokenLen, options.shortTokenDigits),
-      verifyChanges: changesIdentifyUser
-    });
+      verifyChanges: changesIdentifyUser,
+    },
+  });
 
   const user3 = await callNotifier(options, 'identityChange', user2, notifierOptions);
+
   return options.sanitizeUserForClient(user3, options.passwordField);
 }

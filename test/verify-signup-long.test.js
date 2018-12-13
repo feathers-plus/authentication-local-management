@@ -63,7 +63,6 @@ const users_Id = [
               action: 'verifySignupLong',
               value: '000',
             });
-            console.log('result=', result);
             const user = await usersService.get(result.id || result._id);
 
             assert.strictEqual(result.isVerified, true, 'user.isVerified not true');

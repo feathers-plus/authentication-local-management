@@ -13,30 +13,37 @@ module.exports = {
   verifySignupWithShortToken,
 };
 
-async function verifySignupWithLongToken(options, verifyToken, notifierOptions, authUser, provider) {
+async function verifySignupWithLongToken(
+  pluginsContext, verifyToken, notifierOptions, authUser, provider
+) {
   ensureValuesAreStrings(verifyToken);
 
   return await verifySignup(
-    options, { verifyToken }, { verifyToken }, notifierOptions, authUser, provider
+    pluginsContext, { verifyToken }, { verifyToken }, notifierOptions, authUser, provider
   );
 }
 
 async function verifySignupWithShortToken(
-  options, verifyShortToken, identifyUser, notifierOptions, authUser, provider
+  pluginsContext, verifyShortToken, identifyUser, notifierOptions, authUser, provider
 ) {
   ensureValuesAreStrings(verifyShortToken);
-  ensureObjPropsValid(identifyUser, options.identifyUserProps);
+  ensureObjPropsValid(identifyUser, pluginsContext.options.identifyUserProps);
 
-  return await verifySignup(options, identifyUser, { verifyShortToken }, authUser, provider);
+  return await verifySignup(pluginsContext, identifyUser, { verifyShortToken }, authUser, provider);
 }
 
-async function verifySignup (options, query, tokens, notifierOptions, authUser, provider) {
+async function verifySignup (
+  { options, plugins }, query, tokens, notifierOptions, authUser, provider
+) {
   debug('verifySignup', query, tokens);
   const usersService = options.app.service(options.service);
   const usersServiceIdName = usersService.id;
 
-  const users = await options.customizeCalls.verifySignup
-    .find(usersService, { query });
+  const users = await plugins.run('verifySignup.find', {
+    usersService,
+    params: { query },
+  });
+
   const user1 = getUserData(users, ['isNotVerifiedOrHasVerifyChanges', 'verifyNotExpired']);
 
   if (!Object.keys(tokens).every(key => tokens[key] === user1[key])) {
@@ -49,6 +56,7 @@ async function verifySignup (options, query, tokens, notifierOptions, authUser, 
 
   const user2 = await eraseVerifyProps(user1, user1.verifyExpires > Date.now(), user1.verifyChanges || {});
   const user3 = await callNotifier(options, 'verifySignup', user2, notifierOptions)
+
   return options.sanitizeUserForClient(user3, options.passwordField);
 
   async function eraseVerifyProps (user, isVerified, verifyChanges) {
@@ -60,7 +68,10 @@ async function verifySignup (options, query, tokens, notifierOptions, authUser, 
       verifyChanges: {}
     });
 
-    return await options.customizeCalls.verifySignup
-      .patch(usersService, user[usersServiceIdName], patchToUser);
+    return await plugins.run('verifySignup.patch', {
+      usersService,
+      id: user1[usersServiceIdName],
+      data: patchToUser,
+    });
   }
 }

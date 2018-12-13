@@ -58,16 +58,10 @@ const users_Id = [
         });
 
         it('updates verified user', async function () {
-          this.timeout(10000); // ensure its not a timeout issue ????????????????????????????????????????????
-
-          console.log('\n>.test before');
-
           const result = await authLocalMgntService.create({ // This returns without everything being resolved ?????
             action: 'sendResetPwd',
             value: { email: 'b' }
           });
-
-          console.log('\n<.test after', result);
 
           const user = await usersService.get(result.id || result._id); // Causing this to fail ??????????????
           assert.strictEqual(result.isVerified, true, 'user.isVerified not true');

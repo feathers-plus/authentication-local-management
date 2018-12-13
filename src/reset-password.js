@@ -1,12 +1,12 @@
 
 const errors = require('@feathersjs/errors');
 const makeDebug = require('debug');
-const comparePasswords = require('./helpers/compare-passwords');
 const deconstructId = require('./helpers/deconstruct-id');
 const ensureObjPropsValid = require('./helpers/ensure-obj-props-valid');
 const ensureValuesAreStrings = require('./helpers/ensure-values-are-strings');
 const getUserData = require('./helpers/get-user-data');
 const callNotifier = require('./helpers/call-notifier');
+const { comparePasswords } = require('@feathers-plus/commons');
 
 const debug = makeDebug('authLocalMgnt:resetPassword');
 
@@ -16,28 +16,28 @@ module.exports = {
 };
 
 async function resetPwdWithLongToken(
-  options, resetToken, password,  notifierOptions, authUser, provider
+  pluginsContext, resetToken, password,  notifierOptions, authUser, provider
 ) {
   ensureValuesAreStrings(resetToken, password);
 
   return await resetPassword(
-    options, { resetToken }, { resetToken }, password,  notifierOptions, authUser, provider
+    pluginsContext, { resetToken }, { resetToken }, password,  notifierOptions, authUser, provider
   );
 }
 
 async function resetPwdWithShortToken(
-  options, resetShortToken, identifyUser, password,  notifierOptions, authUser, provider
+  pluginsContext, resetShortToken, identifyUser, password,  notifierOptions, authUser, provider
 ) {
   ensureValuesAreStrings(resetShortToken, password);
-  ensureObjPropsValid(identifyUser, options.identifyUserProps);
+  ensureObjPropsValid(identifyUser, pluginsContext.options.identifyUserProps);
 
   return await resetPassword(
-    options, identifyUser, { resetShortToken }, password,  notifierOptions, authUser, provider
+    pluginsContext, identifyUser, { resetShortToken }, password,  notifierOptions, authUser, provider
   );
 }
 
 async function resetPassword (
-  options, query, tokens, password,  notifierOptions, authUser, provider
+  { options, plugins }, query, tokens, password,  notifierOptions, authUser, provider
 ) {
   debug('resetPassword', query, tokens, password);
   const usersService = options.app.service(options.service);
@@ -47,11 +47,16 @@ async function resetPassword (
 
   if (tokens.resetToken) {
     let id = deconstructId(tokens.resetToken);
-    users = await options.customizeCalls.resetPassword
-      .resetTokenGet(usersService, id);
+
+    users = await plugins.run('resetPassword.tokenGet', {
+      usersService,
+      id,
+    });
   } else if (tokens.resetShortToken) {
-    users = await options.customizeCalls.resetPassword
-      .resetShortTokenFind(usersService, { query });
+    users = await plugins.run('resetPassword.shortTokenFind', {
+      usersService,
+      params: { query },
+    });
   } else {
     throw new errors.BadRequest('resetToken and resetShortToken are missing. (authLocalMgnt)',
       { errors: { $className: 'missingToken' } }
@@ -72,26 +77,33 @@ async function resetPassword (
   try {
     await Promise.all(promises);
   } catch (err) {
-    await options.customizeCalls.resetPassword
-      .badTokenpatch(usersService, user1[usersServiceIdName], {
+    await plugins.run('resetPassword.badTokenPatch', {
+      usersService,
+      id: user1[usersServiceIdName],
+      data: {
         resetToken: null,
         resetShortToken: null,
-        resetExpires: null
-      });
+        resetExpires: null,
+      },
+    });
 
     new errors.BadRequest('Invalid token. Get for a new one. (authLocalMgnt)',
       { errors: { $className: 'invalidToken' } }
     );
   }
 
-  const user2 = await options.customizeCalls.resetPassword
-    .patch(usersService, user1[usersServiceIdName], {
+  const user2 = await plugins.run('resetPassword.patch', {
+    usersService,
+    id: user1[usersServiceIdName],
+    data: {
       [options.passwordField]: password,
       resetToken: null,
       resetShortToken: null,
-      resetExpires: null
-    });
+      resetExpires: null,
+    },
+  });
 
   const user3 = await callNotifier(options, 'resetPwd', user2,  notifierOptions);
+
   return options.sanitizeUserForClient(user3, options.passwordField);
 }

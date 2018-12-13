@@ -1,6 +1,7 @@
 
 const { checkContext, getItems, replaceItems } = require('feathers-hooks-common');
-const { getLongToken, getShortToken, ensureFieldHasChanged } = require('../helpers');
+const { getLongToken, getShortToken } = require('@feathers-plus/commons');
+const { ensureFieldHasChanged } = require('../helpers');
 
 module.exports = addVerification;
 

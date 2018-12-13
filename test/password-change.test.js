@@ -4,7 +4,8 @@ const bcrypt = require('bcryptjs');
 const feathers = require('@feathersjs/feathers');
 const feathersMemory = require('feathers-memory');
 const authLocalMgnt = require('../src/index');
-const { hashPassword, bcryptCompare,  bcryptCompareSync } = require('./helpers/hash-password-fake');
+const { hashPasswordFake: { hashPassword, bcryptCompare,  bcryptCompareSync } } =
+  require('@feathers-plus/commons');
 const { timeoutEachTest } = require('./helpers/config');
 
 let stack;

@@ -1,5 +1,5 @@
 
-const isNullsy = require('./is-nullsy');
+const { isNullsy } = require('@feathers-plus/commons');
 
 module.exports = ensureFieldHasChanged;
 
