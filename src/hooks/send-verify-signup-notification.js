@@ -1,6 +1,4 @@
 
-const callNotifier = require('../helpers/call-notifier');
-
 module.exports = sendVerifySignupNotification;
 
 function sendVerifySignupNotification(notifierOptions1, notifyWhen) {
@@ -13,7 +11,13 @@ function sendVerifySignupNotification(notifierOptions1, notifyWhen) {
     if (notifyWhen(context)) {
       const options = context.app.get('localManagement');
 
-      await callNotifier(options, 'sendVerifySignup', context.result, notifierOptions());
+      const sanitizedUser = await plugins.run('sanitizeUserForNotifier', context.result);
+
+      await options.plugins.run('notifier', {
+        type: 'sendVerifySignup',
+        sanitizedUser,
+        notifierOptions,
+      });
     }
   };
 }

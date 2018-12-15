@@ -390,7 +390,13 @@ const users_Id = [
             longTokenLen: 15, // need to reset this
             shortTokenLen: 6, // need to reset this
             shortTokenDigits: true, // need to reset this
-            notifier,
+            plugins: [{
+              trigger: 'notifier',
+              position: 'before',
+              run: async (accumulator, { type, sanitizedUser, notifierOptions }, { options }, pluginContext) => {
+                stack.push({ args: clone([type, sanitizedUser, notifierOptions]), result: sanitizedUser });
+              },
+            }],
           }));
           app.setup();
           authLocalMgntService = app.service('authManagement');
@@ -438,16 +444,6 @@ const users_Id = [
 });
 
 // Helpers
-
-function notifier(app, options) {
-  return async (...args) => {
-    const [ type, sanitizedUser, notifierOptions ] = args;
-
-    stack.push({ args: clone(args), result: sanitizedUser });
-
-    return sanitizedUser
-  }
-}
 
 function makeDateTime(options1) {
   options1 = options1 || {};

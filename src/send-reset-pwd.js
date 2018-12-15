@@ -3,7 +3,6 @@ const makeDebug = require('debug');
 const concatIDAndHash = require('./helpers/concat-id-and-hash');
 const ensureObjPropsValid = require('./helpers/ensure-obj-props-valid');
 const getUserData = require('./helpers/get-user-data');
-const callNotifier = require('./helpers/call-notifier');
 const { getLongToken, getShortToken } = require('@feathers-plus/commons');
 
 const debug = makeDebug('authLocalMgnt:sendResetPwd');
@@ -22,7 +21,7 @@ async function sendResetPwd (
 
   const users = await plugins.run('sendResetPwd.find', {
     usersService,
-    params: { query: identifyUser, provider },
+    params: { query: identifyUser },
   });
 
   const user1 = getUserData(users,  options.skipIsVerifiedCheck ? [] : ['isVerified']);
@@ -36,9 +35,15 @@ async function sendResetPwd (
     resetShortToken: await getShortToken(options.shortTokenLen, options.shortTokenDigits),
   });
 
-  await callNotifier(options, 'sendResetPwd', user2, notifierOptions)
+  const user3 = await plugins.run('sanitizeUserForNotifier', user2);
 
-  const user3 = await plugins.run('sendResetPwd.patch', {
+  await plugins.run('notifier', {
+    type: 'sendResetPwd',
+    sanitizedUser: user3,
+    notifierOptions,
+  });
+
+  const user4 = await plugins.run('sendResetPwd.patch', {
     usersService,
     id: user1[usersServiceIdName],
     data: {
@@ -48,5 +53,5 @@ async function sendResetPwd (
     },
   });
 
-  return options.sanitizeUserForClient(user3, options.passwordField);
+  return await plugins.run('sanitizeUserForClient', user4);
 }

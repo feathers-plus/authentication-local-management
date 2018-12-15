@@ -282,8 +282,14 @@ const usersId = [
           app.configure(makeUsersService({ id: idType, paginate: pagination === 'paginated' }));
           app.configure(authLocalMgnt({
             // maybe reset identifyUserProps
-            notifier,
-            testMode: true
+            testMode: true,
+            plugins: [{
+              trigger: 'notifier',
+              position: 'before',
+              run: async (accumulator, { type, sanitizedUser, notifierOptions }, { options }, pluginContext) => {
+                stack.push({ args: clone([type, sanitizedUser, notifierOptions]), result: sanitizedUser });
+              },
+            }],
           }));
           app.setup();
           authLocalMgntService = app.service('authManagement');
@@ -323,7 +329,7 @@ const usersId = [
               [
                 'resetPwd',
                 Object.assign({}, sanitizeUserForEmail(user)),
-                {}
+                null
               ]);
           } catch (err) {
             console.log(err);

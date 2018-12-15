@@ -227,7 +227,13 @@ const users_Id = [
             longTokenLen: 15,
             shortTokenLen: 6,
             shortTokenDigits: true,
-            notifier,
+            plugins: [{
+              trigger: 'notifier',
+              position: 'before',
+              run: async (accumulator, { type, sanitizedUser, notifierOptions }, { options }, pluginContext) => {
+                stack.push({ args: clone([type, sanitizedUser, notifierOptions]), result: sanitizedUser });
+              },
+            }],
           }));
           app.setup();
           authLocalMgntService = app.service('authManagement');

@@ -3,7 +3,6 @@ const errors = require('@feathersjs/errors');
 const makeDebug = require('debug');
 const ensureObjPropsValid = require('./helpers/ensure-obj-props-valid');
 const getUserData = require('./helpers/get-user-data');
-const callNotifier = require('./helpers/call-notifier');
 const { comparePasswords, getId, getLongToken, getShortToken } = require('@feathers-plus/commons');
 
 const debug = makeDebug('authLocalMgnt:identityChange');
@@ -54,7 +53,13 @@ async function identityChange (
     },
   });
 
-  const user3 = await callNotifier(options, 'identityChange', user2, notifierOptions);
+  const user3 = await plugins.run('sanitizeUserForNotifier', user2);
 
-  return options.sanitizeUserForClient(user3, options.passwordField);
+  const user4 = await plugins.run('notifier', {
+    type: 'identityChange',
+    sanitizedUser: user3,
+    notifierOptions,
+  });
+
+  return await plugins.run('sanitizeUserForClient', user4);
 }

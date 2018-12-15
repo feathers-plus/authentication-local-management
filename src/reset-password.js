@@ -5,7 +5,6 @@ const deconstructId = require('./helpers/deconstruct-id');
 const ensureObjPropsValid = require('./helpers/ensure-obj-props-valid');
 const ensureValuesAreStrings = require('./helpers/ensure-values-are-strings');
 const getUserData = require('./helpers/get-user-data');
-const callNotifier = require('./helpers/call-notifier');
 const { comparePasswords } = require('@feathers-plus/commons');
 
 const debug = makeDebug('authLocalMgnt:resetPassword');
@@ -103,7 +102,13 @@ async function resetPassword (
     },
   });
 
-  const user3 = await callNotifier(options, 'resetPwd', user2,  notifierOptions);
+  const user3 = await plugins.run('sanitizeUserForNotifier', user2);
 
-  return options.sanitizeUserForClient(user3, options.passwordField);
+  const user4 = await plugins.run('notifier', {
+    type: 'resetPwd',
+    sanitizedUser: user3,
+    notifierOptions,
+  });
+
+  return await plugins.run('sanitizeUserForClient', user4);
 }

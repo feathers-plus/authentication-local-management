@@ -163,8 +163,14 @@ const usersId = [
           app = feathers();
           app.configure(makeUsersService({ id: idType, paginate: pagination === 'paginated' }));
           app.configure(authLocalMgnt({
-            notifier,
             testMode: true,
+            plugins: [{
+              trigger: 'notifier',
+              position: 'before',
+              run: async (accumulator, { type, sanitizedUser, notifierOptions }, { options }, pluginContext) => {
+                stack.push({ args: clone([type, sanitizedUser, notifierOptions]), result: sanitizedUser });
+              },
+            }],
           }));
           app.setup();
           authLocalMgntService = app.service('authManagement');
@@ -196,7 +202,7 @@ const usersId = [
               [
                 'resetPwd',
                 Object.assign({}, sanitizeUserForEmail(user)),
-                {}
+                null
               ]);
           } catch (err) {
             console.log(err);
@@ -209,16 +215,6 @@ const usersId = [
 });
 
 // Helpers
-
-function notifier(app, options) {
-  return async (...args) => {
-    const [ type, sanitizedUser, notifierOptions ] = args;
-
-    stack.push({ args: clone(args), result: sanitizedUser });
-
-    return sanitizedUser
-  }
-}
 
 function sanitizeUserForEmail(user) {
   const user1 = Object.assign({}, user);

@@ -1,12 +1,14 @@
 
+const makeDebug = require('debug');
 const checkUnique = require('./check-unique');
 const identityChange = require('./identity-change');
 const passwordChange = require('./password-change');
 const resendVerifySignup = require('./resend-verify-signup');
-const sanitizeUserForClient = require('./helpers/sanitize-user-for-client');
 const sendResetPwd = require('./send-reset-pwd');
 const { resetPwdWithLongToken, resetPwdWithShortToken } = require('./reset-password');
 const { verifySignupWithLongToken, verifySignupWithShortToken } = require('./verify-signup');
+
+const debug = makeDebug('authLocalMgnt:plugins');
 
 module.exports = [
   // main service handlers
@@ -208,6 +210,44 @@ module.exports = [
       await usersService.patch(id, data, params),
   },
 
+  // notifier
+  {
+    trigger: 'notifier',
+    run: async (accumulator, { type, sanitizedUser, notifierOptions }, { options }, pluginContext) => {
+      debug('notifier', type);
+      // console.log('a-l-m default notifier called', type, sanitizedUser, notifierOptions);
+      return sanitizedUser;
+    },
+  },
+
+  // utilities
+  {
+    trigger: 'sanitizeUserForNotifier',
+    run: async (accumulator, user, { options } , pluginContext) => {
+      const sanitizedUser = shallowCloneObject(user);
+
+      delete sanitizedUser[options.passwordField];
+
+      return sanitizedUser;
+    },
+  },
+  {
+    trigger: 'sanitizeUserForClient',
+    run: async (accumulator, user, { options } , pluginContext) => {
+      const sanitizedUser = shallowCloneObject(user);
+
+      delete sanitizedUser[options.passwordField];
+      delete sanitizedUser.verifyExpires;
+      delete sanitizedUser.verifyToken;
+      delete sanitizedUser.verifyShortToken;
+      delete sanitizedUser.verifyChanges;
+      delete sanitizedUser.resetExpires;
+      delete sanitizedUser.resetToken;
+      delete sanitizedUser.resetShortToken;
+
+      return sanitizedUser;
+    },
+  },
 
   // catch error during processing
   {
@@ -239,3 +279,7 @@ module.exports = [
     },
   },
 ];
+
+function shallowCloneObject(obj) {
+  return Object.assign({}, obj);
+}

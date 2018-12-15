@@ -136,9 +136,16 @@ const usersId = [
           app = feathers();
           app.configure(makeUsersService({ id: idType, paginate: pagination === 'paginated' }));
           app.configure(authLocalMgnt({
-            notifier,
             bcryptCompare,
+            plugins: [{
+              trigger: 'notifier',
+              position: 'before',
+              run: async (accumulator, { type, sanitizedUser, notifierOptions }, { options }, pluginContext) => {
+                stack.push({ args: clone([type, sanitizedUser, notifierOptions]), result: sanitizedUser });
+              },
+            }],
           }));
+
           app.setup();
           authLocalMgntService = app.service('authManagement');
 
@@ -177,7 +184,7 @@ const usersId = [
                     user, 'verifyExpires', 'verifyToken', 'verifyShortToken', 'verifyChanges'
                   )
                 ),
-                {}
+                null
               ],
             );
 
@@ -197,16 +204,6 @@ const usersId = [
 });
 
 // Helpers
-
-function notifier(app, options) {
-  return async (...args) => {
-    const [ type, sanitizedUser, notifierOptions ] = args;
-
-    stack.push({ args: clone(args), result: sanitizedUser });
-
-    return sanitizedUser
-  }
-}
 
 function sanitizeUserForEmail(user) {
   const user1 = clone(user);

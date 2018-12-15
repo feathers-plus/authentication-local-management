@@ -10,7 +10,6 @@ const identityChange = require('./identity-change');
 const passwordChange = require('./password-change');
 const resendVerifySignup = require('./resend-verify-signup');
 const pluginsDefault = require('./plugins-default');
-const sanitizeUserForClient = require('./helpers/sanitize-user-for-client');
 const sendResetPwd = require('./send-reset-pwd');
 const { resetPwdWithLongToken, resetPwdWithShortToken } = require('./reset-password');
 const { verifySignupWithLongToken, verifySignupWithShortToken } = require('./verify-signup');
@@ -25,9 +24,6 @@ const optionsDefault = {
   emailField: 'email',
   dialablePhoneField: 'dialablePhone',
   passwordField: 'password', //  Overridden by config/default.json.
-  notifier: (app, options) => async (type, sanitizedUser, notifierOptions) => {
-    // console.log('a-l-m default notifier called', type, sanitizedUser, notifierOptions);
-  },
   buildEmailLink,
   // Token's length will be twice longTokenLen by default.
   // The token for sendResetPwd will be twice LongTokenLen + length of (id || _id) + 3
@@ -42,8 +38,8 @@ const optionsDefault = {
     'sendResetPwd', 'resetPwdLong', 'resetPwdShort',
   ],
   ownAcctOnly: true,
-  sanitizeUserForClient,
   bcryptCompare: bcrypt.compare,
+  plugins: null,
 };
 
 function buildEmailLink(app, actionToVerb) {
@@ -70,25 +66,35 @@ function authenticationLocalManagement(options1 = {}) {
   debug('service being configured.');
 
   return function (app) {
-    // Get defaults from config/default.json
+    // Get default options
     const authOptions = app.get('authentication') || {};
-    optionsDefault.service = authOptions.service || optionsDefault.service;
-    optionsDefault.passwordField =
-      (authOptions.local || {}).passwordField || optionsDefault.passwordField;
 
-    let options = Object.assign({}, optionsDefault, options1, { app });
-    //options.customizeCalls = merge({}, optionsCustomizeCalls, options1.customizeCalls || {});
-    options.notifier = options.notifier(app, options);
+    let options = Object.assign({}, optionsDefault, {
+      app,
+      service: authOptions.service || optionsDefault.service,
+      passwordField: (authOptions.local || {}).passwordField || optionsDefault.passwordField,
+    });
 
-    // Load plugins
-    plugins = new Plugins({ options });
+    // Load plugins. They may add default options.
+    const pluginsContext = { options };
+    plugins = new Plugins(pluginsContext);
     plugins.register(pluginsDefault);
+
+    if (options1.plugins) {
+      plugins.register(options1.plugins);
+    }
+
     (async function() {
       await plugins.setup();
     }());
 
+    // Get final options
+    pluginsContext.options = options =  Object.assign(options, options1, { plugins });
+
+    // Store optiona
     app.set('localManagement', options);
 
+    // Configure custom service
     options.app.use(options.path, authLocalMgntMethods(options, plugins));
   };
 }

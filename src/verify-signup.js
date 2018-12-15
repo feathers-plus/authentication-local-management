@@ -4,7 +4,6 @@ const makeDebug = require('debug');
 const ensureObjPropsValid = require('./helpers/ensure-obj-props-valid');
 const ensureValuesAreStrings = require('./helpers/ensure-values-are-strings');
 const getUserData = require('./helpers/get-user-data');
-const callNotifier = require('./helpers/call-notifier');
 
 const debug = makeDebug('authLocalMgnt:verifySignup');
 
@@ -55,9 +54,16 @@ async function verifySignup (
   }
 
   const user2 = await eraseVerifyProps(user1, user1.verifyExpires > Date.now(), user1.verifyChanges || {});
-  const user3 = await callNotifier(options, 'verifySignup', user2, notifierOptions)
 
-  return options.sanitizeUserForClient(user3, options.passwordField);
+  const user3 = await plugins.run('sanitizeUserForNotifier', user2);
+
+  const user4 = await plugins.run('notifier', {
+    type: 'verifySignup',
+    sanitizedUser: user3,
+    notifierOptions,
+  });
+
+  return await plugins.run('sanitizeUserForClient', user4);
 
   async function eraseVerifyProps (user, isVerified, verifyChanges) {
     const patchToUser = Object.assign({}, verifyChanges || {}, {

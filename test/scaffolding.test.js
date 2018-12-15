@@ -2,14 +2,14 @@
 const assert = require('chai').assert;
 const feathers = require('@feathersjs/feathers');
 const authManagement = require('../src/index');
-const helpers = require('../src/helpers')
 
 const optionsDefault = {
-  app: null,
+  app: null, // assigned during initialization
   service: '/users', // need exactly this for test suite
   path: 'authManagement',
-  notifier: () => Promise.resolve(),
-  longTokenLen: 15, // token's length will be twice this
+  // token's length will be twice this.
+  // resetPassword token will be twice this + id/_id length + 3
+  longTokenLen: 15,
   ownAcctOnly: true,
   passwordField: 'password',
   shortTokenLen: 6,
@@ -22,8 +22,8 @@ const optionsDefault = {
   delay: 1000 * 60 * 60 * 24 * 5, // 5 days
   emailField: 'email',
   identifyUserProps: ['email', 'dialablePhone'],
-  sanitizeUserForClient: helpers.sanitizeUserForClient,
   dialablePhoneField: 'dialablePhone',
+  plugins: null, // changes top default plugins
 };
 
 const userMgntOptions = {
@@ -88,20 +88,14 @@ describe('scaffolding.test.js', () => {
       const options = app.get('localManagement');
 
       delete options.app;
-      delete options.notifier;
       delete options.bcryptCompare;
-      delete options.customizeCalls;
       delete options.authManagementHooks;
-      delete options.catchErr;
       delete options.buildEmailLink;
 
       const expected = Object.assign({}, optionsDefault, userMgntOptions);
       delete expected.app;
-      delete expected.notifier;
       delete expected.bcryptCompare;
-      delete expected.customizeCalls;
       delete expected.authManagementHooks;
-      delete expected.catchErr;
       delete expected.buildEmailLink;
 
       assert.deepEqual(options, expected);
