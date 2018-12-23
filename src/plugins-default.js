@@ -149,7 +149,7 @@ module.exports = [
 
   // verifySignup service calls
   pluginFactory('verifySignup.find', 'find'),
-  pluginFactory('verifySignup.find', 'patch'),
+  pluginFactory('verifySignup.patch', 'patch'),
 
   // notifier
   {

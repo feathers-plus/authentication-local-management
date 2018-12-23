@@ -229,7 +229,7 @@ const users_Id = [
             shortTokenDigits: true,
             plugins: [{
               trigger: 'notifier',
-              position: 'before',
+              position: 'clear',
               run: async (accumulator, { type, sanitizedUser, notifierOptions }, { options }, pluginContext) => {
                 stack.push({ args: clone([type, sanitizedUser, notifierOptions]), result: sanitizedUser });
               },
