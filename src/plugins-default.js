@@ -10,6 +10,7 @@ const { verifySignupWithLongToken, verifySignupWithShortToken } = require('./ver
 
 const debug = makeDebug('authLocalMgnt:plugins');
 
+
 module.exports = [
   // main service handlers
   {
