@@ -3,7 +3,6 @@ const makeDebug = require('debug');
 const checkUnique = require('./check-unique');
 const identityChange = require('./identity-change');
 const passwordChange = require('./password-change');
-const common = require('./plugins-common');
 const resendVerifySignup = require('./resend-verify-signup');
 const sendResetPwd = require('./send-reset-pwd');
 const { resetPwdWithLongToken, resetPwdWithShortToken } = require('./reset-password');
@@ -123,89 +122,33 @@ module.exports = [
   },
 
   // checkUnique service calls
-  {
-    trigger: 'checkUnique.find',
-    run: common.find,
-  },
+  pluginFactory('checkUnique.find', 'find'),
 
   // identityChange service calls
-  {
-    trigger: 'identityChange.find',
-    run: common.find,
-  },
-  {
-    trigger: 'identityChange.patch',
-    run: common.find,
-  },
+  pluginFactory('identityChange.find', 'find'),
+  pluginFactory('identityChange.patch', 'patch'),
 
   // passwordChange service calls
-  {
-    trigger: 'passwordChange.find',
-    run: common.find,
-  },
-  {
-    trigger: 'passwordChange.patch',
-    run: async (accumulator, { usersService, id, data, params }, pluginsContext, pluginContext) =>
-      await usersService.patch(id, data, params),
-  },
+  pluginFactory('passwordChange.find', 'find'),
+  pluginFactory('passwordChange.patch', 'patch'),
 
   // resendVerifySignup service calls
-  {
-    trigger: 'resendVerifySignup.find',
-    run: async (accumulator, { usersService, params}, pluginsContext, pluginContext) =>
-      await usersService.find(params),
-  },
-  {
-    trigger: 'resendVerifySignup.patch',
-    run: async (accumulator, { usersService, id, data, params }, pluginsContext, pluginContext) =>
-      await usersService.patch(id, data, params),
-  },
+  pluginFactory('resendVerifySignup.find', 'find'),
+  pluginFactory('resendVerifySignup.patch', 'patch'),
 
   // resetPassword service calls
-  {
-    trigger: 'resetPassword.tokenGet',
-    run: async (accumulator, { usersService, id, params}, pluginsContext, pluginContext) =>
-      await usersService.get(id, params),
-  },
-  {
-    trigger: 'resetPassword.shortTokenFind',
-    run: async (accumulator, { usersService, params}, pluginsContext, pluginContext) =>
-      await usersService.find(params),
-  },
-  {
-    trigger: 'resetPassword.badTokenPatch',
-    run: async (accumulator, { usersService, id, data, params }, pluginsContext, pluginContext) =>
-      await usersService.patch(id, data, params),
-  },
-  {
-    trigger: 'resetPassword.patch',
-    run: async (accumulator, { usersService, id, data, params }, pluginsContext, pluginContext) =>
-      await usersService.patch(id, data, params),
-  },
+  pluginFactory('resetPassword.tokenGet', 'get'),
+  pluginFactory('resetPassword.shortTokenFind', 'find'),
+  pluginFactory('resetPassword.badTokenPatch', 'patch'),
+  pluginFactory('resetPassword.patch', 'patch'),
 
   // sendResetPwd service calls
-  {
-    trigger: 'sendResetPwd.find',
-    run: async (accumulator, { usersService, params}, pluginsContext, pluginContext) =>
-      await usersService.find(params),
-  },
-  {
-    trigger: 'sendResetPwd.patch',
-    run: async (accumulator, { usersService, id, data, params }, pluginsContext, pluginContext) =>
-      await usersService.patch(id, data, params),
-  },
+  pluginFactory('sendResetPwd.find', 'find'),
+  pluginFactory('sendResetPwd.patch', 'patch'),
 
   // verifySignup service calls
-  {
-    trigger: 'verifySignup.find',
-    run: async (accumulator, { usersService, params}, pluginsContext, pluginContext) =>
-      await usersService.find(params),
-  },
-  {
-    trigger: 'verifySignup.patch',
-    run: async (accumulator, { usersService, id, data, params }, pluginsContext, pluginContext) =>
-      await usersService.patch(id, data, params),
-  },
+  pluginFactory('verifySignup.find', 'find'),
+  pluginFactory('verifySignup.find', 'patch'),
 
   // notifier
   {
@@ -279,4 +222,37 @@ module.exports = [
 
 function shallowCloneObject(obj) {
   return Object.assign({}, obj);
+}
+
+function pluginFactory(trigger, type) {
+  let run;
+
+  switch (type) {
+    case 'find':
+      run = async (accumulator, { usersService, params}, pluginsContext, pluginContext) =>
+        await usersService.find(params);
+      break;
+    case 'get':
+      run = async (accumulator, { usersService, id, params}, pluginsContext, pluginContext) =>
+        await usersService.get(id, params);
+      break;
+    case 'patch':
+      run = async (accumulator, { usersService, id, data, params }, pluginsContext, pluginContext) =>
+        await usersService.patch(id, data, params);
+      break;
+    case 'no-op':
+      run = async (accumulator, data, pluginsContext, pluginContext) =>
+        accumulator || data;
+      break;
+    default:
+      throw new Error(`Invalid type ${type}. (plugins-default`);
+  }
+
+  return {
+    name: trigger,
+    desc: `${trigger} - default plugin, authentication-local-management`,
+    version: '1.0.0',
+    trigger: trigger,
+    run,
+  };
 }
