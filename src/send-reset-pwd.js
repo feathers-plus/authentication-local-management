@@ -7,6 +7,7 @@ const { getLongToken, getShortToken } = require('@feathers-plus/commons');
 
 const debug = makeDebug('authLocalMgnt:sendResetPwd');
 
+
 module.exports = sendResetPwd;
 
 async function sendResetPwd (
