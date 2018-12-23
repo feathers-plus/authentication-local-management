@@ -75,7 +75,7 @@ function authenticationLocalManagement(options1 = {}) {
       passwordField: (authOptions.local || {}).passwordField || optionsDefault.passwordField,
     });
 
-    // Load plugins. They may add default options.
+    // Load plugins. They may add additional default options.
     const pluginsContext = { options };
     plugins = new Plugins(pluginsContext);
     plugins.register(pluginsDefault);

@@ -3,6 +3,7 @@ const makeDebug = require('debug');
 const checkUnique = require('./check-unique');
 const identityChange = require('./identity-change');
 const passwordChange = require('./password-change');
+const common = require('./plugins-common');
 const resendVerifySignup = require('./resend-verify-signup');
 const sendResetPwd = require('./send-reset-pwd');
 const { resetPwdWithLongToken, resetPwdWithShortToken } = require('./reset-password');
@@ -124,27 +125,23 @@ module.exports = [
   // checkUnique service calls
   {
     trigger: 'checkUnique.find',
-    run: async (accumulator, { usersService, params}, pluginsContext, pluginContext) =>
-      await usersService.find(params),
+    run: common.find,
   },
 
   // identityChange service calls
   {
     trigger: 'identityChange.find',
-    run: async (accumulator, { usersService, params}, pluginsContext, pluginContext) =>
-      await usersService.find(params),
+    run: common.find,
   },
   {
     trigger: 'identityChange.patch',
-    run: async (accumulator, { usersService, id, data, params }, pluginsContext, pluginContext) =>
-      await usersService.patch(id, data, params),
+    run: common.find,
   },
 
   // passwordChange service calls
   {
     trigger: 'passwordChange.find',
-    run: async (accumulator, { usersService, params}, pluginsContext, pluginContext) =>
-      await usersService.find(params),
+    run: common.find,
   },
   {
     trigger: 'passwordChange.patch',

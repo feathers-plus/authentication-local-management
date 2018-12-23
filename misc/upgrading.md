@@ -476,3 +476,5 @@ client.logout();
 - WhatsApp as alternative to phone
 
 - Have multiple passwords, e.g. pin number
+
+- pluginsDefaultOptions for plugins-default.js ?
