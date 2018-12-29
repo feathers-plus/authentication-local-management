@@ -90,14 +90,12 @@ describe('scaffolding.test.js', () => {
       delete options.app;
       delete options.bcryptCompare;
       delete options.authManagementHooks;
-      delete options.buildEmailLink;
       delete options.plugins;
 
       const expected = Object.assign({}, optionsDefault, userMgntOptions);
       delete expected.app;
       delete expected.bcryptCompare;
       delete expected.authManagementHooks;
-      delete expected.buildEmailLink;
       delete expected.plugins;
 
       assert.deepEqual(options, expected);

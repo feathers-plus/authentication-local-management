@@ -24,7 +24,6 @@ const optionsDefault = {
   emailField: 'email',
   dialablePhoneField: 'dialablePhone',
   passwordField: 'password', //  Overridden by config/default.json.
-  buildEmailLink,
   // Token's length will be twice longTokenLen by default.
   // The token for sendResetPwd will be twice LongTokenLen + length of (id || _id) + 3
   longTokenLen: 15,
@@ -32,33 +31,17 @@ const optionsDefault = {
   shortTokenDigits: true,
   resetDelay: 1000 * 60 * 60 * 2, // 2 hours
   delay: 1000 * 60 * 60 * 24 * 5, // 5 days
-  identifyUserProps: ['email', 'dialablePhone'],
+  identifyUserProps: [
+    'email', 'dialablePhone'
+  ],
   actionsNoAuth: [
     'resendVerifySignup', 'verifySignupLong', 'verifySignupShort',
     'sendResetPwd', 'resetPwdLong', 'resetPwdShort',
   ],
   ownAcctOnly: true,
   bcryptCompare: bcrypt.compare,
-  plugins: null,
+  plugins: null, // Replaced by instantiated Plugins class during configuration.
 };
-
-function buildEmailLink(app, actionToVerb) {
-  const isProd = process.env.NODE_ENV === 'production';
-  const port = (app.get('port') === '80' || isProd) ? '' : `:${app.get('port')}`;
-  const host = (app.get('host') === 'HOST')? 'localhost': app.get('host');
-  const protocol = (app.get('protocol') === 'PROTOCOL')? 'http': app.get('protocol') || 'http';
-  const url = `${protocol}://${host}${port}/`;
-
-  actionToVerb = {
-    sendVerifySignup: 'verify',
-    resendVerifySignup: 'verify',
-    sendResetPwd: 'reset',
-  };
-
-  return (type, hash) => {
-    return `${url}${actionToVerb[type] || type}/${hash}`;
-  };
-}
 
 module.exports = authenticationLocalManagement;
 

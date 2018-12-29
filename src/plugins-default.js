@@ -197,26 +197,24 @@ module.exports = [
       Promise.reject(err) // support both async and Promise interfaces
   },
 
-  // buildEmailLink
+  // buildUrlLink
   {
-    trigger: 'buildEmailLink',
-    run: async (accumulator, actionToVerb, pluginsContext, pluginContext) => {
+    trigger: 'buildUrlLink',
+    run: async (accumulator, { type, token, actionToVerb }, pluginsContext, pluginContext) => {
       const app = pluginsContext.options.app;
       const isProd = process.env.NODE_ENV === 'production';
       const port = (app.get('port') === '80' || isProd) ? '' : `:${app.get('port')}`;
-      const host = (app.get('host') === 'HOST')? 'localhost': app.get('host');
-      const protocol = (app.get('protocol') === 'PROTOCOL')? 'http': app.get('protocol') || 'http';
+      const host = (app.get('host') === 'HOST') ? 'localhost' : app.get('host');
+      const protocol = (app.get('protocol') === 'PROTOCOL') ? 'http' : app.get('protocol') || 'http';
       const url = `${protocol}://${host}${port}/`;
 
-      actionToVerb = {
+      actionToVerb = actionToVerb || {
         sendVerifySignup: 'verify',
         resendVerifySignup: 'verify',
         sendResetPwd: 'reset',
       };
 
-      return (type, hash) => {
-        return `${url}${actionToVerb[type] || type}/${hash}`;
-      };
+      return `${url}${actionToVerb[type] || type}/${token}`;
     },
   },
 ];

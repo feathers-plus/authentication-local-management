@@ -1,22 +1,22 @@
 
 module.exports = sendVerifySignupNotification;
 
-function sendVerifySignupNotification(notifierOptions1, notifyWhen) {
+function sendVerifySignupNotification (notifierOptions1, notifyWhen) {
   notifyWhen = notifyWhen || (context => !!context.params.provider);
 
-  const notifierOptions = typeof notifierOptions1 === 'function' ?
-    notifierOptions1 : () => notifierOptions1;
+  const notifierOptions = typeof notifierOptions1 === 'function'
+    ? notifierOptions1 : () => notifierOptions1;
 
   return async context => {
     if (notifyWhen(context)) {
       const options = context.app.get('localManagement');
 
-      const sanitizedUser = await plugins.run('sanitizeUserForNotifier', context.result);
+      const sanitizedUser = await options.plugins.run('sanitizeUserForNotifier', context.result);
 
       await options.plugins.run('notifier', {
         type: 'sendVerifySignup',
         sanitizedUser,
-        notifierOptions,
+        notifierOptions
       });
     }
   };

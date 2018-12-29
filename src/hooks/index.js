@@ -14,5 +14,5 @@ module.exports = {
   localManagementHook,
   preventChangesVerification,
   removeVerification,
-  sendVerifySignupNotification,
+  sendVerifySignupNotification
 };

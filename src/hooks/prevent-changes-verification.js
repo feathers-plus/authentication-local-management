@@ -4,7 +4,7 @@ const { checkContext } = require('feathers-hooks-common');
 
 module.exports = preventChangesVerification;
 
-function preventChangesVerification(preventWhen, identifyUserProps, verificationFields) {
+function preventChangesVerification (preventWhen, identifyUserProps, verificationFields) {
   preventWhen = preventWhen || (context => !!context.params.provider); // no-op on server calls
 
   verificationFields = verificationFields || [
