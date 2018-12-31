@@ -8,8 +8,10 @@ function preventChangesVerification (preventWhen, identifyUserProps, verificatio
   preventWhen = preventWhen || (context => !!context.params.provider); // no-op on server calls
 
   verificationFields = verificationFields || [
-    'isVerified', 'verifyExpires', 'verifyToken', 'verifyShortToken', 'verifyChanges',
-    'resetExpires', 'resetToken', 'resetShortToken', 'preferredComm'
+    'isInvitation', 'isVerified', 'preferredComm',
+    'verifyExpires', 'verifyToken', 'verifyShortToken', 'verifyChanges',
+    'resetExpires', 'resetToken', 'resetShortToken',
+    'mfaExpires', 'mfaShortToken', 'mfaType',
   ];
 
   return context => {

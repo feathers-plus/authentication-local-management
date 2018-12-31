@@ -40,7 +40,7 @@ describe('add-verification.test.js', function () {
   });
 
   describe('basics', () => {
-    it('works with no options', async () => {
+    it('works with no options for full user', async () => {
       app.configure(authLocalMgnt());
       app.setup();
 
@@ -48,6 +48,31 @@ describe('add-verification.test.js', function () {
         const ctx = await addVerification()(context);
         const user = ctx.data;
 
+        assert.strictEqual(user.isInvitation, false, 'isInvitation not false');
+        assert.strictEqual(user.isVerified, false, 'isVerified not false');
+        assert.isString(user.verifyToken, 'verifyToken not String');
+        assert.equal(user.verifyToken.length, 30, 'verify token wrong length');
+        assert.equal(user.verifyShortToken.length, 6, 'verify short token wrong length');
+        assert.match(user.verifyShortToken, /^[0-9]+$/);
+        aboutEqualDateTime(user.verifyExpires, makeDateTime());
+        assert.deepEqual(user.verifyChanges, {}, 'verifyChanges not empty object');
+      } catch (err) {
+        console.log(err);
+        assert(false, 'unexpected error');
+      }
+    });
+
+    it('works with no options for invitation', async () => {
+      app.configure(authLocalMgnt());
+      app.setup();
+
+      try {
+        context.data.isInvitation = true;
+
+        const ctx = await addVerification()(context);
+        const user = ctx.data;
+
+        assert.strictEqual(user.isInvitation, true, 'isInvitation not true');
         assert.strictEqual(user.isVerified, false, 'isVerified not false');
         assert.isString(user.verifyToken, 'verifyToken not String');
         assert.equal(user.verifyToken.length, 30, 'verify token wrong length');

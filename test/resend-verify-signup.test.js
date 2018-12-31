@@ -13,15 +13,25 @@ const makeUsersService = (options) => function (app) {
 };
 
 const usersId = [
-  { id: 'a', email: 'a', isVerified: false, verifyToken: '000', verifyShortToken: '00099', verifyExpires: now + 500, username: 'Doe' },
-  { id: 'b', email: 'b', isVerified: true, verifyToken: null, verifyShortToken: null, verifyExpires: null },
-  { id: 'c', email: 'c', isVerified: true, verifyToken: '999', verifyShortToken: '99900', verifyExpires: null }, // impossible
+  { id: 'a', email: 'a', isInvitation: false, isVerified: false,
+    verifyToken: '000', verifyShortToken: '00099', verifyExpires: now + 500, username: 'Doe' },
+  { id: 'b', email: 'b', isInvitation: false, isVerified: true,
+    verifyToken: null, verifyShortToken: null, verifyExpires: null },
+  { id: 'c', email: 'c', isInvitation: false, isVerified: true
+    , verifyToken: '999', verifyShortToken: '99900', verifyExpires: null }, // impossible
+  { id: 'ia', email: 'ia', isInvitation: true, isVerified: false,
+    verifyToken: 'i000', verifyShortToken: 'i00099', verifyExpires: now + 500, username: 'Doe' },
 ];
 
 const users_Id = [
-  { _id: 'a', email: 'a', isVerified: false, verifyToken: '000', verifyShortToken: '00099', verifyExpires: now + 500, username: 'Doe' },
-  { _id: 'b', email: 'b', isVerified: true, verifyToken: null, verifyShortToken: null, verifyExpires: null },
-  { _id: 'c', email: 'c', isVerified: true, verifyToken: '999', verifyShortToken: '99900', verifyExpires: null }, // impossible
+  { _id: 'a', email: 'a', isInvitation: false, isVerified: false,
+    verifyToken: '000', verifyShortToken: '00099', verifyExpires: now + 500, username: 'Doe' },
+  { _id: 'b', email: 'b', isInvitation: false, isVerified: true,
+    verifyToken: null, verifyShortToken: null, verifyExpires: null },
+  { _id: 'c', email: 'c', isInvitation: false, isVerified: true,
+    verifyToken: '999', verifyShortToken: '99900', verifyExpires: null }, // impossible
+  { _id: 'ia', email: 'ia', isInvitation: true, isVerified: false,
+    verifyToken: 'i000', verifyShortToken: 'i00099', verifyExpires: now + 500, username: 'Doe' },
 ];
 
 ['_id', 'id'].forEach(idType => {
@@ -407,7 +417,7 @@ const users_Id = [
           await usersService.create(db);
         });
   
-        it('is called', async () => {
+        it('for full user', async () => {
           const email = 'a';
 
           try {
@@ -430,6 +440,38 @@ const users_Id = [
             assert.deepEqual(
               stack[0].args, [
                 'resendVerifySignup',
+                sanitizeUserForEmail(user),
+                { transport: 'email' }
+              ]);
+          } catch (err) {
+            console.log(err);
+            assert.strictEqual(err, null, 'err code set');
+          }
+        });
+
+        it('for invited user', async () => {
+          const email = 'ia';
+
+          try {
+            result = await authLocalMgntService.create({
+              action: 'resendVerifySignup',
+              value: { email },
+              notifierOptions: { transport: 'email' }
+            });
+            const user = await usersService.get(result.id || result._id);
+
+            assert.strictEqual(result.isVerified, false, 'user.isVerified not false');
+
+            assert.strictEqual(user.isVerified, false, 'isVerified not false');
+            assert.isString(user.verifyToken, 'verifyToken not String');
+            assert.equal(user.verifyToken.length, 30, 'verify token wrong length');
+            assert.equal(user.verifyShortToken.length, 6, 'verify short token wrong length');
+            assert.match(user.verifyShortToken, /^[0-9]+$/);
+            aboutEqualDateTime(user.verifyExpires, makeDateTime());
+
+            assert.deepEqual(
+              stack[0].args, [
+                'resendInvitationSignup',
                 sanitizeUserForEmail(user),
                 { transport: 'email' }
               ]);

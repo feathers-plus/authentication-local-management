@@ -8,7 +8,7 @@ const sendResetPwd = require('./send-reset-pwd');
 const { resetPwdWithLongToken, resetPwdWithShortToken } = require('./reset-password');
 const { verifySignupWithLongToken, verifySignupWithShortToken } = require('./verify-signup');
 
-const debug = makeDebug('authLocalMgnt:plugins');
+const debug = makeDebug('authLocalMgnt:plugins-default');
 
 
 module.exports = [
@@ -104,7 +104,7 @@ module.exports = [
     trigger: 'verifySignupLong',
     run: async (accumulator, data, pluginsContext, pluginContext) => {
       return await verifySignupWithLongToken(pluginsContext,
-        data.value, data.notifierOptions,
+        data.value, data.newPassword, data.notifierOptions,
         data.authUser, data.provider
       );
     },
@@ -161,6 +161,29 @@ module.exports = [
     },
   },
 
+  // buildUrlLink
+  {
+    trigger: 'buildUrlLink',
+    run: async (accumulator, { type, token, actionToVerb }, pluginsContext, pluginContext) => {
+      const app = pluginsContext.options.app;
+      const isProd = process.env.NODE_ENV === 'production';
+      const port = (app.get('port') === '80' || isProd) ? '' : `:${app.get('port')}`;
+      const host = (app.get('host') === 'HOST') ? 'localhost' : app.get('host');
+      const protocol = (app.get('protocol') === 'PROTOCOL') ? 'http' : app.get('protocol') || 'http';
+      const url = `${protocol}://${host}${port}/`;
+
+      actionToVerb = actionToVerb || {
+        sendInviteSignup: 'invite',
+        resendInviteSignup: 'invite',
+        sendVerifySignup: 'verify',
+        resendVerifySignup: 'verify',
+        sendResetPwd: 'reset',
+      };
+
+      return `${url}${actionToVerb[type] || type}/${token}`;
+    },
+  },
+
   // utilities
   {
     trigger: 'sanitizeUserForNotifier',
@@ -196,27 +219,6 @@ module.exports = [
     run: async (accumulator, err, pluginsContext, pluginContext) =>
       Promise.reject(err) // support both async and Promise interfaces
   },
-
-  // buildUrlLink
-  {
-    trigger: 'buildUrlLink',
-    run: async (accumulator, { type, token, actionToVerb }, pluginsContext, pluginContext) => {
-      const app = pluginsContext.options.app;
-      const isProd = process.env.NODE_ENV === 'production';
-      const port = (app.get('port') === '80' || isProd) ? '' : `:${app.get('port')}`;
-      const host = (app.get('host') === 'HOST') ? 'localhost' : app.get('host');
-      const protocol = (app.get('protocol') === 'PROTOCOL') ? 'http' : app.get('protocol') || 'http';
-      const url = `${protocol}://${host}${port}/`;
-
-      actionToVerb = actionToVerb || {
-        sendVerifySignup: 'verify',
-        resendVerifySignup: 'verify',
-        sendResetPwd: 'reset',
-      };
-
-      return `${url}${actionToVerb[type] || type}/${token}`;
-    },
-  },
 ];
 
 function shallowCloneObject(obj) {
@@ -238,6 +240,10 @@ function pluginFactory(trigger, type) {
     case 'patch':
       run = async (accumulator, { usersService, id, data, params }, pluginsContext, pluginContext) =>
         await usersService.patch(id, data, params);
+      break;
+    case 'remove':
+      run = async (accumulator, { usersService, id, params }, pluginsContext, pluginContext) =>
+        await usersService.remove(id, params);
       break;
     case 'no-op':
       run = async (accumulator, data, pluginsContext, pluginContext) =>

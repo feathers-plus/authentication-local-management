@@ -24,13 +24,13 @@ function makeApp(identifyUserProps) {
   }
 }
 
-describe('prevent-changes-verification.test.js', () => {
-  let contextPatch;
+describe('send-verify-signup-notification.test.js', () => {
+  let context;
 
   beforeEach(() => {
     pluginsRun = [];
 
-    contextPatch = {
+    context = {
       app: makeApp(['email', 'dialablePhone']),
       method: 'create',
       type: 'after',
@@ -39,16 +39,32 @@ describe('prevent-changes-verification.test.js', () => {
 
   });
 
-  it('runs', async () => {
-    const result = { email1: 'email1', dialablePhone1: 'dialablePhone1' };
-    contextPatch.result = result;
+  it('for full user', async () => {
+    const result = { isInvitation: false, email1: 'email1', dialablePhone1: 'dialablePhone1' };
+    context.result = result;
 
-    const ctx = await sendVerifySignupNotification(notifierOptions)(contextPatch);
+    const ctx = await sendVerifySignupNotification(notifierOptions)(context);
 
     assert.deepEqual(pluginsRun, [
       { trigger: 'sanitizeUserForNotifier', data: result},
       { trigger: 'notifier', data: {
           type: 'sendVerifySignup',
+          sanitizedUser: result,
+          notifierOptions
+        }}
+    ]);
+  });
+
+  it('for invited user', async () => {
+    const result = { isInvitation: true, email1: 'email1', dialablePhone1: 'dialablePhone1' };
+    context.result = result;
+
+    const ctx = await sendVerifySignupNotification(notifierOptions)(context);
+
+    assert.deepEqual(pluginsRun, [
+      { trigger: 'sanitizeUserForNotifier', data: result},
+      { trigger: 'notifier', data: {
+          type: 'sendInvitationSignup',
           sanitizedUser: result,
           notifierOptions
         }}

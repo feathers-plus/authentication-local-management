@@ -24,13 +24,16 @@ function removeVerification (ifReturnTokens) {
 
       if (context.params.provider && user) { // noop if initiated by server
         delete user.verifyExpires;
-        delete user.resetExpires;
         delete user.verifyChanges;
+        delete user.resetExpires;
+        delete user.mfaExpires;
         if (!ifReturnTokens) {
           delete user.verifyToken;
           delete user.verifyShortToken;
           delete user.resetToken;
           delete user.resetShortToken;
+          delete user.mfaShortToken;
+          delete user.mfaType;
         }
       }
     });

@@ -14,11 +14,13 @@ const makeUsersService = (options) => function (app) {
 
 const usersId = [
   { id: 'a', email: 'a', username: 'aa', isVerified: false, verifyToken: '000', verifyShortToken: '00099', verifyExpires: now + maxTimeAllTests },
-  { id: 'b', email: 'b', username: 'bb', isVerified: false, verifyToken: null, verifyShortToken: null, verifyExpires: null },
+  { id: 'b', email: 'b', username: 'bb', isVerified: false, verifyToken: null,  verifyShortToken: null,    verifyExpires: null },
   { id: 'c', email: 'c', username: 'cc', isVerified: false, verifyToken: '111', verifyShortToken: '11199', verifyExpires: now - maxTimeAllTests },
-  { id: 'd', email: 'd', username: 'dd', isVerified: true, verifyToken: '222', verifyShortToken: '22299', verifyExpires: now - maxTimeAllTests },
-  { id: 'e', email: 'e', username: 'ee', isVerified: true, verifyToken: '800', verifyShortToken: '80099', verifyExpires: now + maxTimeAllTests,
+  { id: 'd', email: 'd', username: 'dd', isVerified: true,  verifyToken: '222', verifyShortToken: '22299', verifyExpires: now - maxTimeAllTests },
+  { id: 'e', email: 'e', username: 'ee', isVerified: true,  verifyToken: '800', verifyShortToken: '80099', verifyExpires: now + maxTimeAllTests,
     verifyChanges: { cellphone: '800' } },
+  { id: 'f', email: 'f', username: 'ff', isVerified: false, verifyToken: '999', verifyShortToken: '99999', verifyExpires: now + maxTimeAllTests,
+    isInvitation: true },
 ];
 
 const users_Id = [
@@ -28,6 +30,8 @@ const users_Id = [
   { _id: 'd', email: 'd', username: 'dd', isVerified: true, verifyToken: '222', verifyShortToken: '22299', verifyExpires: now - maxTimeAllTests },
   { _id: 'e', email: 'e', username: 'ee', isVerified: true, verifyToken: '800', verifyShortToken: '80099', verifyExpires: now + maxTimeAllTests,
     verifyChanges: { cellphone: '800' } },
+  { _id: 'f', email: 'f', username: 'ff', isVerified: false, verifyToken: '999', verifyShortToken: '99999', verifyExpires: now + maxTimeAllTests,
+    isInvitation: true },
 ];
 
 ['_id', 'id'].forEach(idType => {
@@ -57,7 +61,7 @@ const users_Id = [
           await usersService.create(db);
         });
 
-        it('verifies valid token if not verified', async () => {
+        it('verifies valid token if not verified full user', async () => {
           try {
             result = await authLocalMgntService.create({ action: 'verifySignupShort', value: {
                 token: '00099',
@@ -66,6 +70,30 @@ const users_Id = [
             });
             const user = await usersService.get(result.id || result._id);
 
+            assert.strictEqual(result.isInvitation, false, 'user.isInvitation not false');
+            assert.strictEqual(result.isVerified, true, 'user.isVerified not true');
+
+            assert.strictEqual(user.isVerified, true, 'isVerified not true');
+            assert.strictEqual(user.verifyToken, null, 'verifyToken not null');
+            assert.strictEqual(user.verifyShortToken, null, 'verifyShortToken not null');
+            assert.strictEqual(user.verifyExpires, null, 'verifyExpires not null');
+            assert.deepEqual(user.verifyChanges, {}, 'verifyChanges not empty object');
+          } catch (err) {
+            console.log(err);
+            assert(false, 'err code set');
+          }
+        });
+
+        it('verifies valid token if not verified invited user', async () => {
+          try {
+            result = await authLocalMgntService.create({ action: 'verifySignupShort', value: {
+                token: '99999',
+                user: { email: db[5].email },
+              }
+            });
+            const user = await usersService.get(result.id || result._id);
+
+            assert.strictEqual(result.isInvitation, false, 'user.isInvitation not false');
             assert.strictEqual(result.isVerified, true, 'user.isVerified not true');
 
             assert.strictEqual(user.isVerified, true, 'isVerified not true');

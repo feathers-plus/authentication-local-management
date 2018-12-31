@@ -14,11 +14,16 @@ describe('remove-verification.test.js', () => {
         email: 'a@a.com',
         password: '0000000000',
         isVerified: true,
-        verifyToken: '000',
         verifyExpires: Date.now(),
+        verifyToken: '000',
+        verifyShortToken: '999',
         verifyChanges: {},
-        resetToken: '000',
         resetExpires: Date.now(),
+        resetToken: '000',
+        resetShortToken: '999',
+        mfaExpires: Date.now(),
+        mfaShortToken: '999',
+        mfaType: '2fa',
       },
     };
   });
@@ -29,11 +34,16 @@ describe('remove-verification.test.js', () => {
     const user = context.result;
     assert.property(user, 'isVerified');
     assert.equal(user.isVerified, true);
-    assert.notProperty(user, 'verifyToken');
     assert.notProperty(user, 'verifyExpires');
-    assert.notProperty(user, 'resetToken');
-    assert.notProperty(user, 'resetExpires');
+    assert.notProperty(user, 'verifyToken');
+    assert.notProperty(user, 'verifyShortToken');
     assert.notProperty(user, 'verifyChanges');
+    assert.notProperty(user, 'resetExpires');
+    assert.notProperty(user, 'resetToken');
+    assert.notProperty(user, 'resetShortToken');
+    assert.notProperty(user, 'mfaExpires');
+    assert.notProperty(user, 'mfaShortToken');
+    assert.notProperty(user, 'mfaType');
   });
 
   it('works with unverified user', () => {
@@ -44,11 +54,16 @@ describe('remove-verification.test.js', () => {
     const user = context.result;
     assert.property(user, 'isVerified');
     assert.equal(user.isVerified, false);
-    assert.notProperty(user, 'verifyToken');
     assert.notProperty(user, 'verifyExpires');
-    assert.notProperty(user, 'resetToken');
-    assert.notProperty(user, 'resetExpires');
+    assert.notProperty(user, 'verifyToken');
+    assert.notProperty(user, 'verifyShortToken');
     assert.notProperty(user, 'verifyChanges');
+    assert.notProperty(user, 'resetExpires');
+    assert.notProperty(user, 'resetToken');
+    assert.notProperty(user, 'resetShortToken');
+    assert.notProperty(user, 'mfaExpires');
+    assert.notProperty(user, 'mfaShortToken');
+    assert.notProperty(user, 'mfaType');
   });
 
   it('works if addVerification not run', () => {
@@ -64,11 +79,16 @@ describe('remove-verification.test.js', () => {
     const user = context.result;
     assert.property(user, 'isVerified');
     assert.equal(user.isVerified, true);
-    assert.property(user, 'verifyToken');
     assert.property(user, 'verifyExpires');
-    assert.property(user, 'resetToken');
-    assert.property(user, 'resetExpires');
+    assert.property(user, 'verifyToken');
+    assert.property(user, 'verifyShortToken');
     assert.property(user, 'verifyChanges');
+    assert.property(user, 'resetExpires');
+    assert.property(user, 'resetToken');
+    assert.property(user, 'resetShortToken');
+    assert.property(user, 'mfaExpires');
+    assert.property(user, 'mfaShortToken');
+    assert.property(user, 'mfaType');
   });
 
   it('works with multiple verified user', () => {
@@ -78,11 +98,16 @@ describe('remove-verification.test.js', () => {
     context.result.forEach(user => {
       assert.property(user, 'isVerified');
       assert.equal(user.isVerified, true);
-      assert.notProperty(user, 'verifyToken');
       assert.notProperty(user, 'verifyExpires');
-      assert.notProperty(user, 'resetToken');
-      assert.notProperty(user, 'resetExpires');
+      assert.notProperty(user, 'verifyToken');
+      assert.notProperty(user, 'verifyShortToken');
       assert.notProperty(user, 'verifyChanges');
+      assert.notProperty(user, 'resetExpires');
+      assert.notProperty(user, 'resetToken');
+      assert.notProperty(user, 'resetShortToken');
+      assert.notProperty(user, 'mfaExpires');
+      assert.notProperty(user, 'mfaShortToken');
+      assert.notProperty(user, 'mfaType');
     })
   });
 

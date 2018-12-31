@@ -16,6 +16,7 @@ function conversionSql (convertDatetime, convertVerifyChanges, ignore = []) {
     after: str => JSON.parse(str)
   };
 
+  const ifIsInvitation = !ignore.includes('isInvitation');
   const ifIsVerified = !ignore.includes('isVerified');
   const ifVerifyExpires = !ignore.includes('verifyExpires');
   // const ifVerifyToken = !ignore.includes('verifyToken');
@@ -23,7 +24,10 @@ function conversionSql (convertDatetime, convertVerifyChanges, ignore = []) {
   const ifVerifyChanges = !ignore.includes('verifyChanges');
   const ifResetExpires = !ignore.includes('resetExpires');
   // const ifResetToken = !ignore.includes('resetToken');
-  // const ifResetShortToken = !ignore.includes('resetShortToke.n');
+  // const ifResetShortToken = !ignore.includes('resetShortToken');
+  const ifMfaExpires = !ignore.includes('mfaExpires');
+  // const ifMfaShortToken = !ignore.includes('mfaShortToken');
+  // const ifMfaType = !ignore.includes('mfaType');
 
   return context => {
     if (context.type === 'before' && !methodsWithData.includes(context.method)) return context;
@@ -34,6 +38,9 @@ function conversionSql (convertDatetime, convertVerifyChanges, ignore = []) {
     if (recs) {
       recs.forEach(rec => {
         if (context.type === 'before') {
+          if (ifIsInvitation && 'isInvitation' in rec) {
+            rec.isInvitation = rec.isInvitation ? 1 : 0;
+          }
           if (ifIsVerified && 'isVerified' in rec) {
             rec.isVerified = rec.isVerified ? 1 : 0;
           }
@@ -46,9 +53,15 @@ function conversionSql (convertDatetime, convertVerifyChanges, ignore = []) {
           if (ifResetExpires && 'resetExpires' in rec) {
             rec.resetExpires = convertDatetime.before(rec.resetExpires);
           }
+          if (ifMfaExpires && 'mfaExpires' in rec) {
+            rec.mfaExpires = convertDatetime.before(rec.mfaExpires);
+          }
         }
 
         if (context.type === 'after') {
+          if (ifIsInvitation && 'isInvitation' in rec) {
+            rec.isInvitation = !!rec.isInvitation;
+          }
           if (ifIsVerified && 'isVerified' in rec) {
             rec.isVerified = !!rec.isVerified;
           }
@@ -60,6 +73,9 @@ function conversionSql (convertDatetime, convertVerifyChanges, ignore = []) {
           }
           if (ifResetExpires && 'resetExpires' in rec) {
             rec.resetExpires = convertDatetime.after(rec.resetExpires);
+          }
+          if (ifMfaExpires && 'mfaExpires' in rec) {
+            rec.mfaExpires = convertDatetime.after(rec.mfaExpires);
           }
         }
       });

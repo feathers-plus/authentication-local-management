@@ -14,12 +14,13 @@ const optionsDefault = {
   passwordField: 'password',
   shortTokenLen: 6,
   shortTokenDigits: true,
-  resetDelay: 1000 * 60 * 60 * 2, // 2 hours
+  delay: 1000 * 60 * 60 * 24 * 5, // 5 days for re/sendVerifySignup
+  resetDelay: 1000 * 60 * 60 * 2, // 2 hours for sendResetPwd
+  mfaDelay: 1000 * 60 * 60 * 1, // 1 hour for sendMfa
   actionsNoAuth: [
     'resendVerifySignup', 'verifySignupLong', 'verifySignupShort',
     'sendResetPwd', 'resetPwdLong', 'resetPwdShort',
   ],
-  delay: 1000 * 60 * 60 * 24 * 5, // 5 days
   emailField: 'email',
   identifyUserProps: ['email', 'dialablePhone'],
   dialablePhoneField: 'dialablePhone',

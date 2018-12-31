@@ -14,7 +14,7 @@ function sendVerifySignupNotification (notifierOptions1, notifyWhen) {
       const sanitizedUser = await options.plugins.run('sanitizeUserForNotifier', context.result);
 
       await options.plugins.run('notifier', {
-        type: 'sendVerifySignup',
+        type: sanitizedUser.isInvitation ? 'sendInvitationSignup' : 'sendVerifySignup',
         sanitizedUser,
         notifierOptions
       });

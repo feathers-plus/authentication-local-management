@@ -19,6 +19,8 @@ const usersId = [
   { id: 'd', email: 'd', isVerified: true, verifyToken: '222', verifyExpires: now - maxTimeAllTests },
   { id: 'e', email: 'e', isVerified: true, verifyToken: '800', verifyExpires: now + maxTimeAllTests,
     verifyChanges: { cellphone: '800' } },
+  { id: 'f', email: 'f', isVerified: false, verifyToken: '999', verifyExpires: now + maxTimeAllTests,
+    isInvitation: true },
 ];
 
 const users_Id = [
@@ -28,6 +30,8 @@ const users_Id = [
   { _id: 'd', email: 'd', isVerified: true, verifyToken: '222', verifyExpires: now - maxTimeAllTests },
   { _id: 'e', email: 'e', isVerified: true, verifyToken: '800', verifyExpires: now + maxTimeAllTests,
     verifyChanges: { cellphone: '800' } },
+  { _id: 'f', email: 'f', isVerified: false, verifyToken: '999', verifyExpires: now + maxTimeAllTests,
+    isInvitation: true },
 ];
 
 ['_id', 'id'].forEach(idType => {
@@ -57,7 +61,7 @@ const users_Id = [
           await usersService.create(db);
         });
   
-        it('verifies valid token if not verified', async () => {
+        it('verifies valid token if not verified full user', async () => {
           try {
             result = await authLocalMgntService.create({
               action: 'verifySignupLong',
@@ -65,6 +69,7 @@ const users_Id = [
             });
             const user = await usersService.get(result.id || result._id);
 
+            assert.strictEqual(result.isInvitation, false, 'user.isInvitation not false');
             assert.strictEqual(result.isVerified, true, 'user.isVerified not true');
 
             assert.strictEqual(user.isVerified, true, 'isVerified not true');
@@ -72,6 +77,31 @@ const users_Id = [
             assert.strictEqual(user.verifyShortToken, null, 'verifyShortToken not null');
             assert.strictEqual(user.verifyExpires, null, 'verifyExpires not null');
             assert.deepEqual(user.verifyChanges, {}, 'verifyChanges not empty object');
+          } catch (err) {
+            console.log(err);
+            assert(false, 'err code set' + err.message);
+          }
+        });
+
+        it('verifies valid token if not verified invited user', async () => {
+          try {
+            result = await authLocalMgntService.create({
+              action: 'verifySignupLong',
+              value: '999',
+              newPassword: 'abcd',
+            });
+            const user = await usersService.get(result.id || result._id);
+
+            assert.strictEqual(result.isInvitation, false, 'user.isInvitation not false');
+            assert.strictEqual(result.isVerified, true, 'user.isVerified not true');
+
+            assert.strictEqual(user.isVerified, true, 'isVerified not true');
+            assert.strictEqual(user.verifyToken, null, 'verifyToken not null');
+            assert.strictEqual(user.verifyShortToken, null, 'verifyShortToken not null');
+            assert.strictEqual(user.verifyExpires, null, 'verifyExpires not null');
+            assert.deepEqual(user.verifyChanges, {}, 'verifyChanges not empty object');
+
+            assert.strictEqual(user.password, 'abcd', 'password incorrect');
           } catch (err) {
             console.log(err);
             assert(false, 'err code set' + err.message);
@@ -155,12 +185,13 @@ const users_Id = [
           try {
             result = await authLocalMgntService.create({
               action: 'verifySignupLong',
-              value: '999'
+              value: 'xxx'
             });
 
-            assert(fail, 'unexpectedly succeeded');
+            assert(false, 'unexpectedly succeeded');
           } catch (err) {
             assert.isString(err.message);
+            assert.equal(err.message, 'User not found.');
             assert.isNotFalse(err.message);
           }
         });

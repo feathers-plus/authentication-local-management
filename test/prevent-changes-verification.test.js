@@ -26,7 +26,7 @@ describe('prevent-changes-verification.test.js', () => {
   });
 
   it('no default identifyUserProps fields changes', async () => {
-    contextPatch.data = { email1: 'email1', dialablePhone1: 'dialablePhone1' };
+    contextPatch.data = { emailxx: 'email1', dialablePhonexx: 'dialablePhone1' };
     const result = await preventChangesVerification()(contextPatch);
   });
 
@@ -46,6 +46,12 @@ describe('prevent-changes-verification.test.js', () => {
 
   it('default verificationFields fields changes', async () => {
     contextPatch.data = { verifyToken: 'aaa' };
+
+    assert.throws(() => preventChangesVerification()(contextPatch))
+  });
+
+  it('default verificationFields field isInvitation changes', async () => {
+    contextPatch.data = { isInvitation: false };
 
     assert.throws(() => preventChangesVerification()(contextPatch))
   });

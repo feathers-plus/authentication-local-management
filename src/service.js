@@ -10,6 +10,7 @@ const identityChange = require('./identity-change');
 const passwordChange = require('./password-change');
 const resendVerifySignup = require('./resend-verify-signup');
 const pluginsDefault = require('./plugins-default');
+const pluginsExtensions = require('./plugins-extensions');
 const sendResetPwd = require('./send-reset-pwd');
 const { resetPwdWithLongToken, resetPwdWithShortToken } = require('./reset-password');
 const { verifySignupWithLongToken, verifySignupWithShortToken } = require('./verify-signup');
@@ -29,8 +30,9 @@ const optionsDefault = {
   longTokenLen: 15,
   shortTokenLen: 6,
   shortTokenDigits: true,
-  resetDelay: 1000 * 60 * 60 * 2, // 2 hours
-  delay: 1000 * 60 * 60 * 24 * 5, // 5 days
+  delay: 1000 * 60 * 60 * 24 * 5, // 5 days for re/sendVerifySignup
+  resetDelay: 1000 * 60 * 60 * 2, // 2 hours for sendResetPwd
+  mfaDelay: 1000 * 60 * 60 * 1, // 1 hour for sendMfa
   identifyUserProps: [
     'email', 'dialablePhone'
   ],
@@ -62,6 +64,7 @@ function authenticationLocalManagement(options1 = {}) {
     const pluginsContext = { options };
     plugins = new Plugins(pluginsContext);
     plugins.register(pluginsDefault);
+    plugins.register(pluginsExtensions);
 
     if (options1.plugins) {
       plugins.register(options1.plugins);

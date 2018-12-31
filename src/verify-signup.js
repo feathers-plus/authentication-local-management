@@ -13,12 +13,12 @@ module.exports = {
 };
 
 async function verifySignupWithLongToken(
-  pluginsContext, verifyToken, notifierOptions, authUser, provider
+  pluginsContext, verifyToken, newPassword, notifierOptions, authUser, provider
 ) {
   ensureValuesAreStrings(verifyToken);
 
   return await verifySignup(
-    pluginsContext, { verifyToken }, { verifyToken }, notifierOptions, authUser, provider
+    pluginsContext, { verifyToken }, { verifyToken }, newPassword, notifierOptions, authUser, provider
   );
 }
 
@@ -28,11 +28,12 @@ async function verifySignupWithShortToken(
   ensureValuesAreStrings(verifyShortToken);
   ensureObjPropsValid(identifyUser, pluginsContext.options.identifyUserProps);
 
-  return await verifySignup(pluginsContext, identifyUser, { verifyShortToken }, authUser, provider);
+  return await verifySignup(pluginsContext, identifyUser, { verifyShortToken },
+    null, notifierOptions, authUser, provider);
 }
 
 async function verifySignup (
-  { options, plugins }, query, tokens, notifierOptions, authUser, provider
+  { options, plugins }, query, tokens, newPassword, notifierOptions, authUser, provider
 ) {
   debug('verifySignup', query, tokens);
   const usersService = options.app.service(options.service);
@@ -46,14 +47,16 @@ async function verifySignup (
   const user1 = getUserData(users, ['isNotVerifiedOrHasVerifyChanges', 'verifyNotExpired']);
 
   if (!Object.keys(tokens).every(key => tokens[key] === user1[key])) {
-    await eraseVerifyProps(user1, user1.isVerified);
+    await eraseVerifyProps(user1, user1.isVerified, user1.isInvitation);
 
     throw new errors.BadRequest('Invalid token. Get for a new one. (authLocalMgnt)',
       { errors: { $className: 'badParam' } }
     );
   }
 
-  const user2 = await eraseVerifyProps(user1, user1.verifyExpires > Date.now(), user1.verifyChanges || {});
+  const user2 = await eraseVerifyProps(
+    user1, user1.verifyExpires > Date.now(), user1.isInvitation, user1.verifyChanges
+    );
 
   const user3 = await plugins.run('sanitizeUserForNotifier', user2);
 
@@ -65,14 +68,20 @@ async function verifySignup (
 
   return await plugins.run('sanitizeUserForClient', user4);
 
-  async function eraseVerifyProps (user, isVerified, verifyChanges) {
-    const patchToUser = Object.assign({}, verifyChanges || {}, {
+  async function eraseVerifyProps (user, isVerified, isInvitation, verifyChanges = {}) {
+    const patchToUser = Object.assign({}, verifyChanges, {
+      isInvitation: isVerified ? false : isInvitation,
       isVerified,
       verifyToken: null,
       verifyShortToken: null,
       verifyExpires: null,
       verifyChanges: {}
     });
+
+    // Change password if processing an invited user
+    if (isInvitation && newPassword) {
+      patchToUser[options.passwordField] = newPassword;
+    }
 
     return await plugins.run('verifySignup.patch', {
       usersService,

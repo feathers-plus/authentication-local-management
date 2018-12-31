@@ -32,6 +32,7 @@ async function resendVerifySignup (
     usersService,
     id: user1[usersServiceIdName],
     data: {
+      // isInvitation is left as is.
       isVerified: false,
       verifyExpires: Date.now() + options.delay,
       verifyToken: await getLongToken(options.longTokenLen),
@@ -42,7 +43,7 @@ async function resendVerifySignup (
   const user3 = await plugins.run('sanitizeUserForNotifier', user2);
 
   const user4 = await plugins.run('notifier', {
-    type: 'resendVerifySignup',
+    type: user3.isInvitation ? 'resendInvitationSignup' : 'resendVerifySignup',
     sanitizedUser: user3,
     notifierOptions,
   });

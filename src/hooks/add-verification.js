@@ -25,6 +25,9 @@ function addVerification (path) {
         !context.params.user ||
         options.identifyUserProps.some(ensureFieldHasChanged(rec, context.params.user))
       ) {
+        // An invited user, upon creation, must have set rec.isInvitation === true.
+        // Full users, upon creation, need not have rec.isInvitation set.
+        rec.isInvitation = 'isInvitation' in rec ? !!rec.isInvitation : false;
         rec.isVerified = false;
         rec.verifyExpires = Date.now() + options.delay;
         rec.verifyToken = await getLongToken(options.longTokenLen);
