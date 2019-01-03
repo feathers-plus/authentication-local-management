@@ -18,7 +18,7 @@ async function resendVerifySignup (
   const usersServiceIdName = usersService.id;
 
   ensureObjPropsValid(identifyUser,
-    options.identifyUserProps.concat('verifyToken', 'verifyShortToken')
+    options.userIdentityFields.concat('verifyToken', 'verifyShortToken')
   );
 
   const users = await plugins.run('resendVerifySignup.find', {

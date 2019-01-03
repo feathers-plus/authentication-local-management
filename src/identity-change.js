@@ -18,8 +18,8 @@ async function identityChange (
   const usersService = options.app.service(options.service);
   const usersServiceIdName = usersService.id;
 
-  ensureObjPropsValid(identifyUser, options.identifyUserProps);
-  ensureObjPropsValid(changesIdentifyUser, options.identifyUserProps);
+  ensureObjPropsValid(identifyUser, options.userIdentityFields);
+  ensureObjPropsValid(changesIdentifyUser, options.userIdentityFields);
 
   const users = await plugins.run('identityChange.find', {
     usersService,

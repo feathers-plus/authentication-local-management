@@ -2,10 +2,10 @@
 const assert = require('chai').assert;
 const { protectUserAlmFields } = require('../src/index').hooks;
 
-function makeApp(identifyUserProps) {
+function makeApp(userIdentityFields) {
   return {
     get() {
-      return { identifyUserProps };
+      return { userIdentityFields };
     }
   }
 }
@@ -25,18 +25,18 @@ describe('prevent-changes-verification.test.js', () => {
 
   });
 
-  it('no default identifyUserProps fields changes', async () => {
+  it('no default userIdentityFields fields changes', async () => {
     contextPatch.data = { emailxx: 'email1', dialablePhonexx: 'dialablePhone1' };
     const result = await protectUserAlmFields()(contextPatch);
   });
 
-  it('default identifyUserProps fields changes', async () => {
+  it('default userIdentityFields fields changes', async () => {
     contextPatch.data = { email: 'email1', dialablePhone: 'dialablePhone1' };
 
     assert.throws(() => protectUserAlmFields()(contextPatch))
   });
 
-  it('explicit identifyUserProps works', async () => {
+  it('explicit userIdentityFields works', async () => {
     contextPatch.data = { snailMail: 'email1', dialablePhone: 'dialablePhone1' };
 
     assert.throws(() => protectUserAlmFields(

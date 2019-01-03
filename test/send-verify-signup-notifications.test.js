@@ -8,11 +8,11 @@ function notifierOptions() {
 
 let pluginsRun;
 
-function makeApp(identifyUserProps) {
+function makeApp(userIdentityFields) {
   return {
     get() {
       return {
-        identifyUserProps,
+        userIdentityFields,
         plugins: {
           run(trigger, data) {
             pluginsRun.push({ trigger, data });

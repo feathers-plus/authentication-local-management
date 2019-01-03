@@ -106,7 +106,7 @@ function conversionSql (convertDatetime, convertVerifyChanges, ignore = []) {
  - verifyToken: The 30-char token generated for email addr verification (string)
  - verifyShortToken: The 6-digit token generated for cellphone addr verification (string)
  - verifyExpires: When the email addr token expire (Date)
- - verifyChanges: key-value map. New values to apply on verification to some identifyUserProps (see below).
+ - verifyChanges: key-value map. New values to apply on verification to some userIdentityFields (see below).
  - resetToken: The 30-char token generated for forgotten password reset (string)
  - resetShortToken: The 6-digit token generated for forgotten password reset (string)
  - resetExpires: When the forgotten password token expire (Date)
@@ -117,7 +117,7 @@ function conversionSql (convertDatetime, convertVerifyChanges, ignore = []) {
  - My inclination is to go with BIGINT and Date.now() to be compatible with  the createdAt
    and updatedAt hooks.
 
- - identifyUserProps: Prop names in user item which uniquely identify the user,
+ - userIdentityFields: Prop names in user item which uniquely identify the user,
    e.g. ['username', 'email', 'cellphone']. The default is ['email']. The prop values must be strings.
    Only these props may be changed with verification by the service.
    At least one of these props must be provided whenever a short token is used,

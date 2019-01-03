@@ -124,7 +124,7 @@ app.configure(authentication)
 - shortTokenDigits: Short token is digits if true, else alphanumeric. Default is true.
 - delay: Duration for sign up email verification token in ms. Default is 5 days.
 - resetDelay: Duration for password reset token in ms. Default is 2 hours.
-- identifyUserProps: Prop names in `user` item which uniquely identify the user,
+- userIdentityFields: Prop names in `user` item which uniquely identify the user,
 e.g. `['username', 'email', 'cellphone']`.
 The default is `['email']`.
 The prop values must be strings.
@@ -138,14 +138,14 @@ The service creates and maintains the following properties in the `user` item:
 - verifyToken:      The 30-char token generated for email addr verification (string)
 - verifyShortToken: The 6-digit token generated for cellphone addr verification (string)
 - verifyExpires:    When the email addr token expire (Date)
-- verifyChanges     New values to apply on verification to some identifyUserProps (key value object)
+- verifyChanges     New values to apply on verification to some userIdentityFields (key value object)
 - resetToken:       The 30-char token generated for forgotten password reset (string)
 - resetShortToken:  The 6-digit token generated for forgotten password reset (string)
 - resetExpires:     When the forgotten password token expire (Date)
 
 The following `user` item might also contain the following props:
 
-- preferredComm     The preferred way to notify the user. One of identifyUserProps.
+- preferredComm     The preferred way to notify the user. One of userIdentityFields.
 
 The `users` service is expected to be already configured.
 Its `patch` method is used to update the password when needed,
@@ -208,7 +208,7 @@ authManagement.create({ action: 'verifySignupLong',
 // sign up or identityChange verification with short token
 authManagement.create({ action: 'verifySignupShort',
   value: {
-    user, // identify user, e.g. {email: 'a@a.com'}. See options.identifyUserProps.
+    user, // identify user, e.g. {email: 'a@a.com'}. See options.userIdentityFields.
     token, // compares to .verifyShortToken
   }
 })
@@ -230,7 +230,7 @@ authManagement.create({ action: 'resetPwdLong',
 // forgotten password verification with short token
 authManagement.create({ action: 'resetPwdShort',
   value: {
-    user: identifyUser, // identify user, e.g. {email: 'a@a.com'}. See options.identifyUserProps.
+    user: identifyUser, // identify user, e.g. {email: 'a@a.com'}. See options.userIdentityFields.
     token, // compares to .resetShortToken
     password, // new password
   },
@@ -239,7 +239,7 @@ authManagement.create({ action: 'resetPwdShort',
 // change password
 authManagement.create({ action: 'passwordChange',
   value: {
-    user: identifyUser, // identify user, e.g. {email: 'a@a.com'}. See options.identifyUserProps.
+    user: identifyUser, // identify user, e.g. {email: 'a@a.com'}. See options.userIdentityFields.
     oldPassword, // old password for verification
     password, // new password
   },
@@ -248,7 +248,7 @@ authManagement.create({ action: 'passwordChange',
 // change communications
 authManagement.create({ action: 'identityChange',
   value: {
-    user: identifyUser, // identify user, e.g. {email: 'a@a.com'}. See options.identifyUserProps.
+    user: identifyUser, // identify user, e.g. {email: 'a@a.com'}. See options.userIdentityFields.
     password, // current password for verification
     changes, // {email: 'a@a.com'} or {email: 'a@a.com', cellphone: '+1-800-555-1212'}
   },
@@ -492,7 +492,7 @@ as an attack vector.
 New tokens must be acquired for another attempt.
 - API params are verified to be strings. If the param is an object, the values of its props are
 verified to be strings.
-- options.identifyUserProps restricts the prop names allowed in param objects.
+- options.userIdentityFields restricts the prop names allowed in param objects.
 - In order to protect sensitive data, you should set a hook that prevent `PATCH` or `PUT` calls on
 authentication-management related properties:
 ```javascript

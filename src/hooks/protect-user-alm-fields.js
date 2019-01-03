@@ -4,7 +4,7 @@ const { checkContext } = require('feathers-hooks-common');
 
 module.exports = protectUserAlmFields;
 
-function protectUserAlmFields (preventWhen, identifyUserProps, verificationFields) {
+function protectUserAlmFields (preventWhen, userIdentityFields, verificationFields) {
   preventWhen = preventWhen || (context => !!context.params.provider); // no-op on server calls
 
   verificationFields = verificationFields || [
@@ -22,8 +22,8 @@ function protectUserAlmFields (preventWhen, identifyUserProps, verificationField
     if (preventWhen(context)) {
       const data = context.data;
       const options = context.app.get('localManagement');
-      const identifyProps = identifyUserProps ||
-        (options || {}).identifyUserProps || ['email', 'dialablePhone'];
+      const identifyProps = userIdentityFields ||
+        (options || {}).userIdentityFields || ['email', 'dialablePhone'];
 
       const fields = [].concat(identifyProps, verificationFields);
 

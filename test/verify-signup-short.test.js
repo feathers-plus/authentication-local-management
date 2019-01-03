@@ -50,7 +50,7 @@ const users_Id = [
           app = feathers();
           app.configure(makeUsersService({ id: idType, paginate: pagination === 'paginated' }));
           app.configure(authLocalMgnt({
-            identifyUserProps: ['email', 'username'],
+            userIdentityFields: ['email', 'username'],
           }));
           app.setup();
           authLocalMgntService = app.service('authManagement');
@@ -282,7 +282,7 @@ const users_Id = [
           app = feathers();
           app.configure(makeUsersService({ id: idType, paginate: pagination === 'paginated' }));
           app.configure(authLocalMgnt({
-            // maybe reset identifyUserProps
+            // maybe reset userIdentityFields
             testMode: true,
             plugins: [{
               trigger: 'notifier',

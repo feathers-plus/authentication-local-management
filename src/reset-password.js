@@ -28,7 +28,7 @@ async function resetPwdWithShortToken(
   pluginsContext, resetShortToken, identifyUser, password,  notifierOptions, authUser, provider
 ) {
   ensureValuesAreStrings(resetShortToken, password);
-  ensureObjPropsValid(identifyUser, pluginsContext.options.identifyUserProps);
+  ensureObjPropsValid(identifyUser, pluginsContext.options.userIdentityFields);
 
   return await resetPassword(
     pluginsContext, identifyUser, { resetShortToken }, password,  notifierOptions, authUser, provider

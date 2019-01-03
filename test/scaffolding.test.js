@@ -21,7 +21,9 @@ const optionsDefault = {
     'resendVerifySignup', 'verifySignupLong', 'verifySignupShort',
     'sendResetPwd', 'resetPwdLong', 'resetPwdShort',
   ],
-  identifyUserProps: ['email', 'dialablePhone'],
+  notifierEmailField: 'email',
+  notifierDialablePhoneField: 'dialablePhone',
+  userIdentityFields: ['email', 'dialablePhone'],
   plugins: null, // changes top default plugins
 };
 

@@ -36,7 +36,9 @@ const optionsDefault = {
   // passwordField - only
   //
   // delay -> verifyDelay
-  // identityChange -> changeProtectedFields
+  // DONE identityChange -> changeProtectedFields
+  // path -> almServicePath
+  // service -> usersService
   // DONE preventChangesVerification -> protectUserAlmFields
   //
   // number of old passwords to retain for each passwordField
@@ -44,9 +46,8 @@ const optionsDefault = {
   // passwordHistory: array of arrays
   // [nameField, passwordHash, timestamp]
   //
-  // path -> almServicePath
-  // service -> usersService
-  identifyUserProps: [
+
+  userIdentityFields: [
     'email', 'dialablePhone'
   ],
   passwordField: 'password', //  Overridden by config/default.json.

@@ -18,7 +18,7 @@ async function passwordChange (
   const usersServiceIdName = usersService.id;
 
   ensureValuesAreStrings(oldPassword, password);
-  ensureObjPropsValid(identifyUser, options.identifyUserProps);
+  ensureObjPropsValid(identifyUser, options.userIdentityFields);
 
   const users = await plugins.run('passwordChange.find', {
     usersService,

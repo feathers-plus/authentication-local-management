@@ -19,11 +19,11 @@ function addVerification (path) {
       // We do NOT add verification fields if the 3 following conditions are fulfilled:
       // - context is PATCH or PUT
       // - user is authenticated
-      // - user's identifyUserProps fields did not change
+      // - user's userIdentityFields fields did not change
       if (
         !(context.method === 'patch' || context.method === 'update') ||
         !context.params.user ||
-        options.identifyUserProps.some(ensureFieldHasChanged(rec, context.params.user))
+        options.userIdentityFields.some(ensureFieldHasChanged(rec, context.params.user))
       ) {
         // An invited user, upon creation, must have set rec.isInvitation === true.
         // Full users, upon creation, need not have rec.isInvitation set.

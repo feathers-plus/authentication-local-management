@@ -26,7 +26,7 @@ async function verifySignupWithShortToken(
   pluginsContext, verifyShortToken, identifyUser, notifierOptions, authUser, provider
 ) {
   ensureValuesAreStrings(verifyShortToken);
-  ensureObjPropsValid(identifyUser, pluginsContext.options.identifyUserProps);
+  ensureObjPropsValid(identifyUser, pluginsContext.options.userIdentityFields);
 
   return await verifySignup(pluginsContext, identifyUser, { verifyShortToken },
     null, notifierOptions, authUser, provider);

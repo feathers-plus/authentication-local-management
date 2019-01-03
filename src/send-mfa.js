@@ -17,7 +17,7 @@ async function sendMfa (
   const usersServiceIdName = usersService.id;
   debug('id', usersService.id);
 
-  ensureObjPropsValid(identifyUser, options.identifyUserProps);
+  ensureObjPropsValid(identifyUser, options.userIdentityFields);
 
   const users = await plugins.run('sendMfa.find', {
     usersService,
