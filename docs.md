@@ -122,7 +122,7 @@ app.configure(authentication)
 - longTokenLen: Half the length of the long token. Default is 15, giving 30-char tokens.
 - shortTokenLen: Length of short token. Default is 6.
 - shortTokenDigits: Short token is digits if true, else alphanumeric. Default is true.
-- delay: Duration for sign up email verification token in ms. Default is 5 days.
+- verifyDelay: Duration for sign up email verification token in ms. Default is 5 days.
 - resetDelay: Duration for password reset token in ms. Default is 2 hours.
 - userIdentityFields: Prop names in `user` item which uniquely identify the user,
 e.g. `['username', 'email', 'cellphone']`.

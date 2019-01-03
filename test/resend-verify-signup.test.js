@@ -489,7 +489,7 @@ const users_Id = [
 
 function makeDateTime(options1) {
   options1 = options1 || {};
-  return Date.now() + (options1.delay || defaultVerifyDelay);
+  return Date.now() + (options1.verifyDelay || defaultVerifyDelay);
 }
 
 function aboutEqualDateTime(time1, time2, msg, delta) {

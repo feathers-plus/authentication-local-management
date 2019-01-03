@@ -46,7 +46,7 @@ async function identityChange (
     usersService,
     id: user1[usersServiceIdName],
     data: {
-      verifyExpires: Date.now() + options.delay,
+      verifyExpires: Date.now() + options.verifyDelay,
       verifyToken: await getLongToken(options.longTokenLen),
       verifyShortToken: await getShortToken(options.shortTokenLen, options.shortTokenDigits),
       verifyChanges: changesIdentifyUser,

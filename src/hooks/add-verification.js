@@ -29,7 +29,7 @@ function addVerification (path) {
         // Full users, upon creation, need not have rec.isInvitation set.
         rec.isInvitation = 'isInvitation' in rec ? !!rec.isInvitation : false;
         rec.isVerified = false;
-        rec.verifyExpires = Date.now() + options.delay;
+        rec.verifyExpires = Date.now() + options.verifyDelay;
         rec.verifyToken = await getLongToken(options.longTokenLen);
         rec.verifyShortToken = await getShortToken(options.shortTokenLen, options.shortTokenDigits);
         rec.verifyChanges = {};

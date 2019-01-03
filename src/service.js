@@ -27,7 +27,7 @@ const optionsDefault = {
   longTokenLen: 15,
   shortTokenLen: 6,
   shortTokenDigits: true,
-  delay: 1000 * 60 * 60 * 24 * 5, // 5 days for re/sendVerifySignup
+  verifyDelay: 1000 * 60 * 60 * 24 * 5, // 5 days for re/sendVerifySignup
   resetDelay: 1000 * 60 * 60 * 2, // 2 hours for sendResetPwd
   mfaDelay: 1000 * 60 * 60, // 1 hour for sendMfa
   // userIdentityFields
@@ -35,7 +35,7 @@ const optionsDefault = {
   // userProtectedFields
   // passwordField - only
   //
-  // delay -> verifyDelay
+  // DONE delay -> verifyDelay
   // DONE identityChange -> changeProtectedFields
   // path -> almServicePath
   // service -> usersService

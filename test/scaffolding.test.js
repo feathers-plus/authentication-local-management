@@ -14,7 +14,7 @@ const optionsDefault = {
   passwordField: 'password',
   shortTokenLen: 6,
   shortTokenDigits: true,
-  delay: 1000 * 60 * 60 * 24 * 5, // 5 days for re/sendVerifySignup
+  verifyDelay: 1000 * 60 * 60 * 24 * 5, // 5 days for re/sendVerifySignup
   resetDelay: 1000 * 60 * 60 * 2, // 2 hours for sendResetPwd
   mfaDelay: 1000 * 60 * 60 * 1, // 1 hour for sendMfa
   commandsNoAuth: [ // Unauthenticated users may run these commands

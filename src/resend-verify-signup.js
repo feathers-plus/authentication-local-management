@@ -34,7 +34,7 @@ async function resendVerifySignup (
     data: {
       // isInvitation is left as is.
       isVerified: false,
-      verifyExpires: Date.now() + options.delay,
+      verifyExpires: Date.now() + options.verifyDelay,
       verifyToken: await getLongToken(options.longTokenLen),
       verifyShortToken: await getShortToken(options.shortTokenLen, options.shortTokenDigits),
     },

@@ -108,8 +108,8 @@ describe('add-verification.test.js', function () {
       }
     });
 
-    it('delay option works', async () => {
-      const options = { delay: 1000 * 60 * 60 * 24 * 5 }; // 5 days
+    it('verifyDelay option works', async () => {
+      const options = { verifyDelay: 1000 * 60 * 60 * 24 * 5 }; // 5 days
       app.configure(authLocalMgnt(options));
       app.setup();
 
@@ -309,7 +309,7 @@ describe('add-verification.test.js', function () {
 });
 
 function makeDateTime(options1 = {}) {
-  return Date.now() + (options1.delay || defaultVerifyDelay);
+  return Date.now() + (options1.verifyDelay || defaultVerifyDelay);
 }
 
 function aboutEqualDateTime(time1, time2, msg, delta = 500) {
