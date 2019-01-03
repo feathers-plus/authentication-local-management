@@ -1,6 +1,6 @@
 
 const assert = require('chai').assert;
-const { preventChangesVerification } = require('../src/index').hooks;
+const { protectUserAlmFields } = require('../src/index').hooks;
 
 function makeApp(identifyUserProps) {
   return {
@@ -27,19 +27,19 @@ describe('prevent-changes-verification.test.js', () => {
 
   it('no default identifyUserProps fields changes', async () => {
     contextPatch.data = { emailxx: 'email1', dialablePhonexx: 'dialablePhone1' };
-    const result = await preventChangesVerification()(contextPatch);
+    const result = await protectUserAlmFields()(contextPatch);
   });
 
   it('default identifyUserProps fields changes', async () => {
     contextPatch.data = { email: 'email1', dialablePhone: 'dialablePhone1' };
 
-    assert.throws(() => preventChangesVerification()(contextPatch))
+    assert.throws(() => protectUserAlmFields()(contextPatch))
   });
 
   it('explicit identifyUserProps works', async () => {
     contextPatch.data = { snailMail: 'email1', dialablePhone: 'dialablePhone1' };
 
-    assert.throws(() => preventChangesVerification(
+    assert.throws(() => protectUserAlmFields(
       null, ['snailMail']
     )(contextPatch))
   });
@@ -47,26 +47,26 @@ describe('prevent-changes-verification.test.js', () => {
   it('default verificationFields fields changes', async () => {
     contextPatch.data = { verifyToken: 'aaa' };
 
-    assert.throws(() => preventChangesVerification()(contextPatch))
+    assert.throws(() => protectUserAlmFields()(contextPatch))
   });
 
   it('default verificationFields field isInvitation changes', async () => {
     contextPatch.data = { isInvitation: false };
 
-    assert.throws(() => preventChangesVerification()(contextPatch))
+    assert.throws(() => protectUserAlmFields()(contextPatch))
   });
 
   it('explicit verificationFields fields changes', async () => {
     contextPatch.data = { myVerifyToken: 'aaa' };
 
-    assert.throws(() => preventChangesVerification(
+    assert.throws(() => protectUserAlmFields(
       null, null, ['myVerifyToken']
     )(contextPatch))
   });
 
   it('preventWhen works', async () => {
     contextPatch.data = { email: 'email1', dialablePhone: 'dialablePhone1' };
-    const result = await preventChangesVerification(
+    const result = await protectUserAlmFields(
       () => false
     )(contextPatch);
   });

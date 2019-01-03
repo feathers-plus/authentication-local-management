@@ -3,7 +3,7 @@ const addVerification = require('./add-verification');
 const conversionSql = require('./conversion-sql');
 const isVerified = require('./is-verified');
 const localManagementHook = require('./local-management-hook');
-const preventChangesVerification = require('./prevent-changes-verification');
+const protectUserAlmFields = require('./protect-user-alm-fields');
 const removeVerification = require('./remove-verification');
 const sendVerifySignupNotification = require('./send-verify-signup-notification');
 
@@ -12,7 +12,7 @@ module.exports = {
   conversionSql,
   isVerified,
   localManagementHook,
-  preventChangesVerification,
+  protectUserAlmFields,
   removeVerification,
   sendVerifySignupNotification
 };

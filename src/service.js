@@ -22,9 +22,6 @@ const optionsDefault = {
   app: null, // Value set during configuration.
   service: '/users', // Need exactly this for test suite. Overridden by config/default.json.
   path: 'authManagement',
-  emailField: 'email',
-  dialablePhoneField: 'dialablePhone',
-  passwordField: 'password', //  Overridden by config/default.json.
   // Token's length will be twice longTokenLen by default.
   // The token for sendResetPwd will be twice LongTokenLen + length of (id || _id) + 3
   longTokenLen: 15,
@@ -32,16 +29,40 @@ const optionsDefault = {
   shortTokenDigits: true,
   delay: 1000 * 60 * 60 * 24 * 5, // 5 days for re/sendVerifySignup
   resetDelay: 1000 * 60 * 60 * 2, // 2 hours for sendResetPwd
-  mfaDelay: 1000 * 60 * 60 * 1, // 1 hour for sendMfa
+  mfaDelay: 1000 * 60 * 60, // 1 hour for sendMfa
+  // userIdentityFields
+  // userExtraPasswordFields - add passwordField as first element
+  // userProtectedFields
+  // passwordField - only
+  //
+  // delay -> verifyDelay
+  // identityChange -> changeProtectedFields
+  // DONE preventChangesVerification -> protectUserAlmFields
+  //
+  // number of old passwords to retain for each passwordField
+  // countEachPasswordHistory
+  // passwordHistory: array of arrays
+  // [nameField, passwordHash, timestamp]
+  //
+  // path -> almServicePath
+  // service -> usersService
   identifyUserProps: [
     'email', 'dialablePhone'
   ],
-  commandsNoAuth: [ // Unauthenticated users may run these commands
+  passwordField: 'password', //  Overridden by config/default.json.
+  // Unauthenticated users may run these commands
+  commandsNoAuth: [
     'resendVerifySignup', 'verifySignupLong', 'verifySignupShort',
     'sendResetPwd', 'resetPwdLong', 'resetPwdShort',
   ],
+  // Fields used by the notifier.
+  // 'dialablePhone' also needs to be coded with the common dialablePhoneNumber hook.
+  notifierEmailField: 'email',
+  notifierDialablePhoneField: 'dialablePhone',
+  //
   ownAcctOnly: true,
   bcryptCompare: bcrypt.compare,
+  // Plugins in addition to or overriding the default ones.
   plugins: null, // Replaced by instantiated Plugins class during configuration.
 };
 

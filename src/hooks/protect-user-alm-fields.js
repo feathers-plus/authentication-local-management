@@ -2,9 +2,9 @@
 const errors = require('@feathersjs/errors');
 const { checkContext } = require('feathers-hooks-common');
 
-module.exports = preventChangesVerification;
+module.exports = protectUserAlmFields;
 
-function preventChangesVerification (preventWhen, identifyUserProps, verificationFields) {
+function protectUserAlmFields (preventWhen, identifyUserProps, verificationFields) {
   preventWhen = preventWhen || (context => !!context.params.provider); // no-op on server calls
 
   verificationFields = verificationFields || [
@@ -15,7 +15,7 @@ function preventChangesVerification (preventWhen, identifyUserProps, verificatio
   ];
 
   return context => {
-    checkContext(context, 'before', ['patch'], 'preventChangesVerification');
+    checkContext(context, 'before', ['patch'], 'protectUserAlmFields');
 
     // Clients cannot directly modify identity fields like email & phone
     // nor verification fields.
@@ -30,7 +30,7 @@ function preventChangesVerification (preventWhen, identifyUserProps, verificatio
       fields.forEach(name => {
         if (name in data && data[name] !== undefined) {
           throw new errors.BadRequest(
-            `Field ${name} may not be patched. (preventChangesVerification)`
+            `Field ${name} may not be patched. (protectUserAlmFields)`
           );
         }
       });

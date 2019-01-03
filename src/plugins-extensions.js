@@ -44,31 +44,6 @@ module.exports = [
       );
     },
   },
-  /*
-  // users record
-  { password: 'x', pin: 'x', 'badge' }
-  // options
-  identify[Additional]PasswordProps: ['password', 'pin', 'badge']
-  // hooks
-  conversionSql hook
-  // code with password as param
-  identityChange - need password value as param
-  sanitizeUserForNotifier
-  sanitizeUserForClient
-  verify-signup - need in initial password for an invited user)
-  */
-  {
-    name: 'passwordsChange',
-    desc: 'passwordsChange - default plugin, authentication-local-management',
-    version: '1.0.0',
-    trigger: 'passwordsChange',
-    run: async (accumulator, data, pluginsContext, pluginContext) => {
-      return await passwordChange(pluginsContext,
-        data.value.user, data.value.oldPassword, data.value.password, data.notifierOptions,
-        data.authUser, data.provider
-      );
-    },
-  },
 
   // deleteExpiredUsers service calls
   {
@@ -94,10 +69,6 @@ module.exports = [
   // verifyMfa service calls
   pluginFactory('verifyMfa.find', 'find'),
   pluginFactory('verifyMfa.patch', 'patch'),
-
-  // passwordsChange service calls
-  pluginFactory('passwordsChange.find', 'find'),
-  pluginFactory('passwordsChange.patch', 'patch'),
 ];
 
 function shallowCloneObject(obj) {
