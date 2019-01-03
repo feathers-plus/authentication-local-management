@@ -13,7 +13,7 @@ async function sendMfa (
   { options, plugins }, identifyUser, type, notifierOptions, authUser, provider
 ) {
   debug('sendMfa');
-  const usersService = options.app.service(options.service);
+  const usersService = options.app.service(options.usersServicePath);
   const usersServiceIdName = usersService.id;
   debug('id', usersService.id);
 

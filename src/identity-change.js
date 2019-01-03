@@ -15,7 +15,7 @@ async function identityChange (
 ) {
   // note this call does not update the authenticated user info in hooks.params.user.
   debug('identityChange', password, changesIdentifyUser);
-  const usersService = options.app.service(options.service);
+  const usersService = options.app.service(options.usersServicePath);
   const usersServiceIdName = usersService.id;
 
   ensureObjPropsValid(identifyUser, options.userIdentityFields);

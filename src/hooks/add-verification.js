@@ -5,7 +5,7 @@ const { ensureFieldHasChanged } = require('../helpers');
 
 module.exports = addVerification;
 
-function addVerification (path) {
+function addVerification () {
   return async context => {
     checkContext(context, 'before', ['create', 'patch', 'update']);
 

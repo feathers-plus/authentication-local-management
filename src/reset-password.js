@@ -39,7 +39,7 @@ async function resetPassword (
   { options, plugins }, query, tokens, password,  notifierOptions, authUser, provider
 ) {
   debug('resetPassword', query, tokens, password);
-  const usersService = options.app.service(options.service);
+  const usersService = options.app.service(options.usersServicePath);
   const usersServiceIdName = usersService.id;
   const promises = [];
   let users;

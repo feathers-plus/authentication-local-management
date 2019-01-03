@@ -14,7 +14,7 @@ async function sendResetPwd (
   { options, plugins }, identifyUser, notifierOptions, authUser, provider
 ) {
   debug('sendResetPwd');
-  const usersService = options.app.service(options.service);
+  const usersService = options.app.service(options.usersServicePath);
   const usersServiceIdName = usersService.id;
   debug('id', usersService.id);
 

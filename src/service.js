@@ -19,51 +19,52 @@ const debug = makeDebug('authLocalMgnt:service');
 let plugins;
 
 const optionsDefault = {
-  app: null, // Value set during configuration.
-  service: '/users', // Need exactly this for test suite. Overridden by config/default.json.
-  path: 'authManagement',
-  // Token's length will be twice longTokenLen by default.
-  // The token for sendResetPwd will be twice LongTokenLen + length of (id || _id) + 3
-  longTokenLen: 15,
+  almServicePath: 'localManagement',
+
+  /* These fields are overridden by config/default.json */
+  usersServicePath: '/users', // authentication.serviceNeed. Need default '/users' for test suite.
+  passwordField: 'password', // authentication.local.passwordField. Change with passwordChange.
+  /* Token lengths */
+  longTokenLen: 15, // Len * 0.5. sendResetPwd len is 2 * longTokenLen + users.id.length + 3.
   shortTokenLen: 6,
   shortTokenDigits: true,
+  /* Token durations */
   verifyDelay: 1000 * 60 * 60 * 24 * 5, // 5 days for re/sendVerifySignup
   resetDelay: 1000 * 60 * 60 * 2, // 2 hours for sendResetPwd
   mfaDelay: 1000 * 60 * 60, // 1 hour for sendMfa
-  // userIdentityFields
-  // userExtraPasswordFields - add passwordField as first element
-  // userProtectedFields
-  // passwordField - only
-  //
-  // DONE delay -> verifyDelay
-  // DONE identityChange -> changeProtectedFields
-  // path -> almServicePath
-  // service -> usersService
-  // DONE preventChangesVerification -> protectUserAlmFields
-  //
+
+  // identityChange -> changeProtectedUserFields
   // number of old passwords to retain for each passwordField
   // countEachPasswordHistory
   // passwordHistory: array of arrays
   // [nameField, passwordHash, timestamp]
   //
 
-  userIdentityFields: [
+  /* These fields in users may be changed only with the changeProtectedUserFields command. */
+  userIdentityFields: [ // Fields uniquely identifying the user.
     'email', 'dialablePhone'
   ],
-  passwordField: 'password', //  Overridden by config/default.json.
-  // Unauthenticated users may run these commands
+  userExtraPasswordFields: [ // Extra password-like fields to hash in addition to passwordField.
+    // e.g. 'pin', 'badge'
+  ],
+  userProtectedFields: [ // Other protected fields.
+    // e.g. 'userIssuingInvitation'
+  ],
+
+  /* Unauthenticated users may run these commands */
   commandsNoAuth: [
     'resendVerifySignup', 'verifySignupLong', 'verifySignupShort',
     'sendResetPwd', 'resetPwdLong', 'resetPwdShort',
   ],
-  // Fields used by the notifier.
-  // 'dialablePhone' also needs to be coded with the common dialablePhoneNumber hook.
+
+  /* Fields used by the notifier. */
   notifierEmailField: 'email',
-  notifierDialablePhoneField: 'dialablePhone',
-  //
+  notifierDialablePhoneField: 'dialablePhone', // also needs to be coded in dialablePhoneNumber hook.
+
   ownAcctOnly: true,
   bcryptCompare: bcrypt.compare,
-  // Plugins in addition to or overriding the default ones.
+  /* Values set during configuration */
+  app: null, // Replaced by Feathers app.
   plugins: null, // Replaced by instantiated Plugins class during configuration.
 };
 
@@ -74,12 +75,12 @@ function authenticationLocalManagement(options1 = {}) {
 
   return function (app) {
     // Get default options
-    const authOptions = app.get('authentication') || {};
+    const authConfig = app.get('authentication') || {};
 
     let options = Object.assign({}, optionsDefault, {
       app,
-      service: authOptions.service || optionsDefault.service,
-      passwordField: (authOptions.local || {}).passwordField || optionsDefault.passwordField,
+      usersServicePath: authConfig.service || optionsDefault.usersServicePath,
+      passwordField: (authConfig.local || {}).passwordField || optionsDefault.passwordField,
     });
 
     // Load plugins. They may add additional default options.
@@ -97,13 +98,15 @@ function authenticationLocalManagement(options1 = {}) {
     }());
 
     // Get final options
-    pluginsContext.options = options =  Object.assign(options, options1, { plugins });
+    options =  Object.assign(options, options1, { plugins });
+    options.userExtraPasswordFields = [options.passwordField].concat(options.userExtraPasswordFields);
+    pluginsContext.options = options;
 
     // Store optiona
     app.set('localManagement', options);
 
     // Configure custom service
-    options.app.use(options.path, authLocalMgntMethods(options, plugins));
+    options.app.use(options.almServicePath, authLocalMgntMethods(options, plugins));
   };
 }
 

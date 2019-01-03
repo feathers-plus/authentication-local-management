@@ -49,7 +49,7 @@ const users_Id = [
 
           }));
           app.setup();
-          authLocalMgntService = app.service('authManagement');
+          authLocalMgntService = app.service('localManagement');
 
           usersService = app.service('users');
           await usersService.remove(null);

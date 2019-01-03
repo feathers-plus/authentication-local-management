@@ -36,7 +36,7 @@ async function verifySignup (
   { options, plugins }, query, tokens, newPassword, notifierOptions, authUser, provider
 ) {
   debug('verifySignup', query, tokens);
-  const usersService = options.app.service(options.service);
+  const usersService = options.app.service(options.usersServicePath);
   const usersServiceIdName = usersService.id;
 
   const users = await plugins.run('verifySignup.find', {

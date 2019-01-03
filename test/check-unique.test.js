@@ -36,7 +36,7 @@ const users_Id = [
           app.configure(authLocalMgnt());
           app.configure(makeUsersService({ id: idType, paginate: pagination === 'paginated' }));
           app.setup();
-          authLocalMgntService = app.service('authManagement');
+          authLocalMgntService = app.service('localManagement');
 
           usersService = app.service('users');
           await usersService.remove(null);

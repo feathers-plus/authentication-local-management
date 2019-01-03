@@ -99,15 +99,15 @@ Leaving it a pure API server, lets it be used with both native and browser clien
 ## Service
 
 ```javascript
-import authManagement from 'feathers-authentication-management';
+import localManagement from 'feathers-authentication-management';
 app.configure(authentication)
-  .configure(authManagement({ options }))
+  .configure(localManagement({ options }))
   .configure(user);
 ```
 
 `options` are:
 - service: The path of the service for user items, e.g. `/users` (default) or `/organization`.
-- path: The path to associate with this service. Default `authManagement`.
+- almServicePath: The path to associate with this service. Default `localManagement`.
  See [Multiple services](#multiple-services) for more information.
 - notifier: `function(type, user, notifierOptions)` returns a Promise.
    - type: type of notification
@@ -156,7 +156,7 @@ The user must be signed in before being allowed to change their password or comm
 The service, for feathers-authenticate v1.x, requires hooks similar to:
 ```javascript
     const isAction = (...args) => hook => args.includes(hook.data.action);
-    app.service('authManagement').before({
+    app.service('localManagement').before({
       create: [
         hooks.iff(isAction('passwordChange', 'identityChange'), auth.hooks.authenticate('jwt')),
       ],
@@ -183,10 +183,10 @@ import authManagementService from 'feathers-authentication-management';
 app.configure(authManagementService(options));
 
 
-const authManagement = app.service('authManagement');
+const localManagement = app.service('localManagement');
 
 // check props are unique in the users items
-authManagement.create({ action: 'checkUnique',
+localManagement.create({ action: 'checkUnique',
   value: identifyUser, // e.g. {email, username}. Props with null or undefined are ignored.
   ownId, // excludes your current user from the search
   meta: { noErrMsg }, // if return an error.message if not unique
@@ -195,18 +195,18 @@ authManagement.create({ action: 'checkUnique',
 // noErrMsg determines if the returned error.message contains text. This may simplify your client side validation.
 
 // resend sign up verification notification
-authManagement.create({ action: 'resendVerifySignup',
+localManagement.create({ action: 'resendVerifySignup',
   value: identifyUser, // {email}, {token: verifyToken}
   notifierOptions: {}, // options passed to options.notifier, e.g. {preferredComm: 'cellphone'}
 })
 
 // sign up or identityChange verification with long token
-authManagement.create({ action: 'verifySignupLong',
+localManagement.create({ action: 'verifySignupLong',
   value: verifyToken, // compares to .verifyToken
 })
 
 // sign up or identityChange verification with short token
-authManagement.create({ action: 'verifySignupShort',
+localManagement.create({ action: 'verifySignupShort',
   value: {
     user, // identify user, e.g. {email: 'a@a.com'}. See options.userIdentityFields.
     token, // compares to .verifyShortToken
@@ -214,13 +214,13 @@ authManagement.create({ action: 'verifySignupShort',
 })
 
 // send forgotten password notification
-authManagement.create({ action: 'sendResetPwd',
+localManagement.create({ action: 'sendResetPwd',
   value: identifyUser, // {email}, {token: verifyToken}
   notifierOptions, // options passed to options.notifier, e.g. {preferredComm: 'email'}
 })
 
 // forgotten password verification with long token
-authManagement.create({ action: 'resetPwdLong',
+localManagement.create({ action: 'resetPwdLong',
   value: {
     token, // compares to .resetToken
     password, // new password
@@ -228,7 +228,7 @@ authManagement.create({ action: 'resetPwdLong',
 })
 
 // forgotten password verification with short token
-authManagement.create({ action: 'resetPwdShort',
+localManagement.create({ action: 'resetPwdShort',
   value: {
     user: identifyUser, // identify user, e.g. {email: 'a@a.com'}. See options.userIdentityFields.
     token, // compares to .resetShortToken
@@ -237,7 +237,7 @@ authManagement.create({ action: 'resetPwdShort',
 })
 
 // change password
-authManagement.create({ action: 'passwordChange',
+localManagement.create({ action: 'passwordChange',
   value: {
     user: identifyUser, // identify user, e.g. {email: 'a@a.com'}. See options.userIdentityFields.
     oldPassword, // old password for verification
@@ -246,7 +246,7 @@ authManagement.create({ action: 'passwordChange',
 })
 
 // change communications
-authManagement.create({ action: 'identityChange',
+localManagement.create({ action: 'identityChange',
   value: {
     user: identifyUser, // identify user, e.g. {email: 'a@a.com'}. See options.userIdentityFields.
     password, // current password for verification
@@ -278,39 +278,39 @@ The wrappers return a Promise.
 ```javascript
 <script src=".../feathers-authentication-management/lib/client.js"></script>
   or
-import AuthManagement from 'feathers-authentication-management/lib/client';
+import localManagement from 'feathers-authentication-management/lib/client';
 const app = feathers() ...
-const authManagement = new AuthManagement(app);
+const localManagement = new localManagement(app);
 
 // check props are unique in the users items
-authManagement.checkUnique(identifyUser, ownId, ifErrMsg)
+localManagement.checkUnique(identifyUser, ownId, ifErrMsg)
 
 // resend sign up verification notification
-authManagement.resendVerifySignup(identifyUser, notifierOptions)
+localManagement.resendVerifySignup(identifyUser, notifierOptions)
 
 // sign up or identityChange verification with long token
-authManagement.verifySignupLong(verifyToken)
+localManagement.verifySignupLong(verifyToken)
 
 // sign up or identityChange verification with short token
-authManagement.verifySignupShort(verifyShortToken, identifyUser)
+localManagement.verifySignupShort(verifyShortToken, identifyUser)
 
 // send forgotten password notification
-authManagement.sendResetPwd(identifyUser, notifierOptions)
+localManagement.sendResetPwd(identifyUser, notifierOptions)
 
 // forgotten password verification with long token
-authManagement.resetPwdLong(resetToken, password)
+localManagement.resetPwdLong(resetToken, password)
 
 // forgotten password verification with short token
-authManagement.resetPwdShort(resetShortToken, identifyUser, password)
+localManagement.resetPwdShort(resetShortToken, identifyUser, password)
 
 // change password
-authManagement.passwordChange(oldPassword, password, identifyUser)
+localManagement.passwordChange(oldPassword, password, identifyUser)
 
 // change identity
-authManagement.identityChange(password, changesIdentifyUser, identifyUser)
+localManagement.identityChange(password, changesIdentifyUser, identifyUser)
 
 // Authenticate user and log on if user is verified. v0.x only.
-authManagement.authenticate(email, password)
+localManagement.authenticate(email, password)
 ```
 
 ### HTTP fetch
@@ -318,7 +318,7 @@ authManagement.authenticate(email, password)
 ```javascript
 // check props are unique in the users items
 // Set params just like [Feathers method calls.](#methods)
-fetch('/authManagement', {
+fetch('/localManagement', {
   method: 'POST', headers: { Accept: 'application/json' },
   body: JSON.stringify({ action: 'checkUnique', value: identifyUser, ownId, meta: { noErrMsg } })
 })
@@ -339,18 +339,18 @@ See `feathers-starter-react-redux-login-roles` for a working example.
 import feathers from 'feathers-client';
 import reduxifyServices from 'feathers-reduxify-services';
 const app = feathers().configure(feathers.socketio(socket)).configure(feathers.hooks());
-const services = reduxifyServices(app, ['users', 'authManagement', ...]);
+const services = reduxifyServices(app, ['users', 'localManagement', ...]);
 ...
 // hook up Redux reducers
 export default combineReducers({
   users: services.users.reducer,
-  authManagement: services.authManagement.reducer,
+  localManagement: services.localManagement.reducer,
 });
 ...
 
 // email addr verification with long token
 // Feathers is now 100% compatible with Redux. Use just like [Feathers method calls.](#methods)
-store.dispatch(services.authManagement.create({ action: 'verifySignupLong',
+store.dispatch(services.localManagement.create({ action: 'verifySignupLong',
     value: verifyToken,
   }, {})
 );
@@ -381,9 +381,9 @@ store.dispatch(signin.authenticate({ type: 'local', email, password }))
 ## Hooks
 The service does not itself handle creation of a new user account nor the sending of the initial
 sign up verification request.
-Instead hooks are provided for you to use with the `users` service `create` method. If you set a service path other than the default of `'authManagement'`, the custom path name must be passed into the hook.
+Instead hooks are provided for you to use with the `users` service `create` method. If you set a service path other than the default of `'localManagement'`, the custom path name must be passed into the hook.
 
-### `verifyHooks.addVerification( path = 'authManagement' )`
+### `verifyHooks.addVerification( almServicePath = 'localManagement' )`
 
 ```javascript
 const verifyHooks = require('feathers-authentication-management').hooks;

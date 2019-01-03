@@ -49,7 +49,7 @@ const users_Id = [
 
           }));
           app.setup();
-          authLocalMgntService = app.service('authManagement');
+          authLocalMgntService = app.service('localManagement');
 
           usersService = app.service('users');
           await usersService.remove(null);
@@ -145,7 +145,7 @@ const users_Id = [
             shortTokenDigits: true,
           }));
           app.setup();
-          authLocalMgntService = app.service('authManagement');
+          authLocalMgntService = app.service('localManagement');
 
           usersService = app.service('users');
           await usersService.remove(null);
@@ -193,7 +193,7 @@ const users_Id = [
             shortTokenDigits: false,
           }));
           app.setup();
-          authLocalMgntService = app.service('authManagement');
+          authLocalMgntService = app.service('localManagement');
 
           usersService = app.service('users');
           await usersService.remove(null);
@@ -250,7 +250,7 @@ const users_Id = [
             }],
           }));
           app.setup();
-          authLocalMgntService = app.service('authManagement');
+          authLocalMgntService = app.service('localManagement');
 
           usersService = app.service('users');
           await usersService.remove(null);

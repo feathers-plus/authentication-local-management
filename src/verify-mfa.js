@@ -13,7 +13,7 @@ async function verifyMfa (
   { options, plugins }, identifyUser, token, type, authUser, provider
 ) {
   debug('verifyMfa');
-  const usersService = options.app.service(options.service);
+  const usersService = options.app.service(options.usersServicePath);
   const usersServiceIdName = usersService.id;
   debug('id', usersService.id);
 

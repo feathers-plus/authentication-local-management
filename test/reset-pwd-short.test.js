@@ -56,7 +56,7 @@ const usersId = [
             userIdentityFields: ['email', 'username']
           }));
           app.setup();
-          authLocalMgntService = app.service('authManagement');
+          authLocalMgntService = app.service('localManagement');
 
           usersService = app.service('users');
           await usersService.remove(null);
@@ -292,7 +292,7 @@ const usersId = [
             }],
           }));
           app.setup();
-          authLocalMgntService = app.service('authManagement');
+          authLocalMgntService = app.service('localManagement');
 
           usersService = app.service('users');
           await usersService.remove(null);

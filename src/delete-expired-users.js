@@ -10,7 +10,7 @@ async function deleteExpiredUsers (
   debug('deleteExpiredUsers');
   if (provider || authUser) return; // Only call by server is allowed.
 
-  const usersService = options.app.service(options.service);
+  const usersService = options.app.service(options.usersServicePath);
   const usersServiceIdName = usersService.id;
   debug('id', usersService.id);
 

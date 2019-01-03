@@ -1,12 +1,12 @@
 
 const assert = require('chai').assert;
 const feathers = require('@feathersjs/feathers');
-const authManagement = require('../src/index');
+const localManagement = require('../src/index');
 
 const optionsDefault = {
   app: null, // assigned during initialization
-  service: '/users', // need exactly this for test suite
-  path: 'authManagement',
+  usersServicePath: '/users', // need exactly this for test suite
+  almServicePath: 'localManagement',
   // token's length will be twice this.
   // resetPassword token will be twice this + id/_id length + 3
   longTokenLen: 15,
@@ -16,7 +16,7 @@ const optionsDefault = {
   shortTokenDigits: true,
   verifyDelay: 1000 * 60 * 60 * 24 * 5, // 5 days for re/sendVerifySignup
   resetDelay: 1000 * 60 * 60 * 2, // 2 hours for sendResetPwd
-  mfaDelay: 1000 * 60 * 60 * 1, // 1 hour for sendMfa
+  mfaDelay: 1000 * 60 * 60, // 1 hour for sendMfa
   commandsNoAuth: [ // Unauthenticated users may run these commands
     'resendVerifySignup', 'verifySignupLong', 'verifySignupShort',
     'sendResetPwd', 'resetPwdLong', 'resetPwdShort',
@@ -24,6 +24,8 @@ const optionsDefault = {
   notifierEmailField: 'email',
   notifierDialablePhoneField: 'dialablePhone',
   userIdentityFields: ['email', 'dialablePhone'],
+  userExtraPasswordFields: [],
+  userProtectedFields: [],
   plugins: null, // changes top default plugins
 };
 
@@ -35,7 +37,7 @@ const userMgntOptions = {
 
 const orgMgntOptions = {
   service: '/organizations',
-  path: 'authManagement/org', // *** specify path for this instance of service
+  almServicePath: 'localManagement/org', // *** specify path for this instance of service
   notifier: () => Promise.resolve(),
   shortTokenLen: 10,
 };
@@ -56,7 +58,7 @@ function user() {
   const service = app.service('/users');
 
   service.hooks({
-    before: { create: authManagement.hooks.addVerification() }
+    before: { create: localManagement.hooks.addVerification() }
   });
 }
 
@@ -70,7 +72,7 @@ function organization() {
   const service = app.service('/organizations');
 
   service.hooks({
-    before: { create: authManagement.hooks.addVerification('authManagement/org') }, // *** which one
+    before: { create: localManagement.hooks.addVerification('localManagement/org') }, // *** which one
   });
 }
 
@@ -80,7 +82,7 @@ describe('scaffolding.test.js', () => {
 
     beforeEach(() => {
       app = feathers();
-      app.configure(authManagement(userMgntOptions));
+      app.configure(localManagement(userMgntOptions));
       app.configure(services);
       app.setup();
     });
@@ -94,6 +96,8 @@ describe('scaffolding.test.js', () => {
       delete options.plugins;
 
       const expected = Object.assign({}, optionsDefault, userMgntOptions);
+      expected.userExtraPasswordFields =
+        [expected.passwordField].concat(expected.userExtraPasswordFields);
       delete expected.app;
       delete expected.bcryptCompare;
       delete expected.authManagementHooks;
@@ -111,7 +115,7 @@ describe('scaffolding.test.js', () => {
     });
 
     it('can call service', async () => {
-      const authLocalMgntService = app.service('authManagement');
+      const authLocalMgntService = app.service('localManagement');
 
       const result = await authLocalMgntService.create({
         action: 'checkUnique',
@@ -127,8 +131,8 @@ describe('scaffolding.test.js', () => {
 
     beforeEach(() => {
       app = feathers();
-      app.configure(authManagement(userMgntOptions));
-      app.configure(authManagement(orgMgntOptions));
+      app.configure(localManagement(userMgntOptions));
+      app.configure(localManagement(orgMgntOptions));
       app.configure(services);
       app.setup();
     });
@@ -151,8 +155,8 @@ describe('scaffolding.test.js', () => {
     });
 
     it('can call services', async () => {
-      const authLocalMgntService = app.service('authManagement'); // *** the default
-      const authMgntOrgService = app.service('authManagement/org'); // *** which one
+      const authLocalMgntService = app.service('localManagement'); // *** the default
+      const authMgntOrgService = app.service('localManagement/org'); // *** which one
 
       // call the user instance
       const result = await authLocalMgntService.create({

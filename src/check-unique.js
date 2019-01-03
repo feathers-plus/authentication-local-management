@@ -10,7 +10,7 @@ module.exports = checkUnique;
 // This module is usually called from the UI to check username, email, etc. are unique.
 async function checkUnique ({ options, plugins }, identifyUser, ownId, meta, authUser, provider) {
   debug('checkUnique', identifyUser, ownId, meta);
-  const usersService = options.app.service(options.service);
+  const usersService = options.app.service(options.usersServicePath);
   const usersServiceIdName = usersService.id;
   const allProps = [];
 

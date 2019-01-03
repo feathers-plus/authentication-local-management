@@ -14,7 +14,7 @@ async function passwordChange (
   { options, plugins }, identifyUser, oldPassword, password, notifierOptions, authUser, provider
 ) {
   debug('passwordChange', oldPassword, password);
-  const usersService = options.app.service(options.service);
+  const usersService = options.app.service(options.usersServicePath);
   const usersServiceIdName = usersService.id;
 
   ensureValuesAreStrings(oldPassword, password);

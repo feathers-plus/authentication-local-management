@@ -85,7 +85,7 @@ describe('client-server.test.js', function () {
         const userRec = await app.service('users').get(id);
         await app.service('users').patch(id, { isVerified: true });
 
-        const authLocalMgntClient = client.service('authManagement');
+        const authLocalMgntClient = client.service('localManagement');
         authLocalMgntClient.timeout = timeoutAuthLocalMgntClient; // 60000
 
         const result = await authLocalMgntClient.create({
@@ -118,7 +118,7 @@ describe('client-server.test.js', function () {
         const userRec = await app.service('users').get(id);
         await app.service('users').patch(id, { isVerified: true });
 
-        const authLocalMgntClient = client.service('authManagement');
+        const authLocalMgntClient = client.service('localManagement');
         authLocalMgntClient.timeout = timeoutAuthLocalMgntClient; // 60000
 
         const result = await authLocalMgntClient.create({
@@ -179,7 +179,7 @@ describe('client-server.test.js', function () {
         const userRec = await app.service('users').get(id);
         await app.service('users').patch(id, { isVerified: true });
 
-        const authLocalMgntClient = client.service('authManagement');
+        const authLocalMgntClient = client.service('localManagement');
         authLocalMgntClient.timeout = timeoutAuthLocalMgntClient; // 60000
 
         await authLocalMgntClient.create({
@@ -289,7 +289,7 @@ function servicesIndexJs(app1) {
     // ... config
   }));
 
-  app1.service('authManagement').hooks({
+  app1.service('localManagement').hooks({
     before: {
       create: localManagementHook()
     }
@@ -371,7 +371,7 @@ async function configClient(host, port, email1, password1,
     }
   }
 
-  const authLocalMgntClient = client.service('authManagement');
+  const authLocalMgntClient = client.service('localManagement');
   authLocalMgntClient.timeout = timeoutAuthLocalMgntClient; // 60000
 
   return client;

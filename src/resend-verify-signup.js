@@ -14,7 +14,7 @@ async function resendVerifySignup (
   { options, plugins }, identifyUser, notifierOptions, authUser, provider
 ) {
   debug('identifyUser=', identifyUser);
-  const usersService = options.app.service(options.service);
+  const usersService = options.app.service(options.usersServicePath);
   const usersServiceIdName = usersService.id;
 
   ensureObjPropsValid(identifyUser,

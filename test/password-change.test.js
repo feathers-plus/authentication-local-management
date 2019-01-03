@@ -53,7 +53,7 @@ describe('password-change.test.js', function () {
               bcryptCompare,
             }));
             app.setup();
-            authLocalMgntService = app.service('authManagement');
+            authLocalMgntService = app.service('localManagement');
 
             usersService = app.service('users');
             await usersService.remove(null);
@@ -156,7 +156,7 @@ describe('password-change.test.js', function () {
               }],
             }));
             app.setup();
-            authLocalMgntService = app.service('authManagement');
+            authLocalMgntService = app.service('localManagement');
 
             usersService = app.service('users');
             await usersService.remove(null);

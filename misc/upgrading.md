@@ -421,8 +421,8 @@ The isVerified would no longer be needed once its merged into feathersjs/authent
 ### Configuring the client
 
 This is an example of configuring the client, including authenticating the client
-and configuring `authManagement`.
-The `authManagement` service needs a timeout greater than 5 seconds as multiple values may be hashed.
+and configuring `localManagement`.
+The `localManagement` service needs a timeout greater than 5 seconds as multiple values may be hashed.
 
 ```js
 async function configClient(host, port, email1, password1,
@@ -455,7 +455,7 @@ async function configClient(host, port, email1, password1,
     throw new Error(`Unable to authenticate: ${err.message}`);
   }
 
-  const authLocalMgntClient = client.service('authManagement');
+  const authLocalMgntClient = client.service('localManagement');
   authLocalMgntClient.timeout = timeoutAuthLocalMgntClient; // 20000 !important
 
   return client;

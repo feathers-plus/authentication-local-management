@@ -51,7 +51,7 @@ const users_Id = [
 
           }));
           app.setup();
-          authLocalMgntService = app.service('authManagement');
+          authLocalMgntService = app.service('localManagement');
 
           usersService = app.service('users');
           await usersService.remove(null);
@@ -60,7 +60,7 @@ const users_Id = [
         });
   
         it('removes users with default datetime', async () => {
-          try {
+          //try {
             await authLocalMgntService.create({
               action: 'deleteExpiredUsers',
             });
@@ -70,10 +70,10 @@ const users_Id = [
             const keys = users.map(users => users.id || users._id).sort();
 
             assert.deepEqual(keys, ['c', 'd', 'g', 'h']);
-          } catch (err) {
-            console.log(err);
-            assert(false, 'err code set' + err.message);
-          }
+          //} catch (err) {
+          //  console.log(err);
+          //  assert(false, 'err code set' + err.message);
+          //}
         });
 
         it('removes users with explicit datetime', async () => {
