@@ -1,6 +1,8 @@
 
 const makeDebug = require('debug');
 const deleteExpiredUsers = require('./delete-expired-users');
+const sendMfa = require('./send-mfa');
+const verifyMfa = require('./verify-mfa');
 
 const debug = makeDebug('authLocalMgnt:plugins-extensions');
 
@@ -14,6 +16,55 @@ module.exports = [
     run: async (accumulator, data, pluginsContext, pluginContext) => {
       return await deleteExpiredUsers(pluginsContext,
         data,
+        data.authUser, data.provider
+      );
+    },
+  },
+  {
+    name: 'sendMfa',
+    desc: 'sendMfa - default plugin, authentication-local-management',
+    version: '1.0.0',
+    trigger: 'sendMfa',
+    run: async (accumulator, data, pluginsContext, pluginContext) => {
+      return await sendMfa(pluginsContext,
+        data.value.user, data.value.type, data.notifierOptions,
+        data.authUser, data.provider
+      );
+    },
+  },
+  {
+    name: 'verifyMfa',
+    desc: 'verifyMfa - default plugin, authentication-local-management',
+    version: '1.0.0',
+    trigger: 'verifyMfa',
+    run: async (accumulator, data, pluginsContext, pluginContext) => {
+      return await verifyMfa(pluginsContext,
+        data.value.user, data.value.token, data.value.type,
+        data.authUser, data.provider
+      );
+    },
+  },
+  /*
+  // users record
+  { password: 'x', pin: 'x', 'badge' }
+  // options
+  identify[Additional]PasswordProps: ['password', 'pin', 'badge']
+  // hooks
+  conversionSql hook
+  // code with password as param
+  identityChange - need password value as param
+  sanitizeUserForNotifier
+  sanitizeUserForClient
+  verify-signup - need in initial password for an invited user)
+  */
+  {
+    name: 'passwordsChange',
+    desc: 'passwordsChange - default plugin, authentication-local-management',
+    version: '1.0.0',
+    trigger: 'passwordsChange',
+    run: async (accumulator, data, pluginsContext, pluginContext) => {
+      return await passwordChange(pluginsContext,
+        data.value.user, data.value.oldPassword, data.value.password, data.notifierOptions,
         data.authUser, data.provider
       );
     },
@@ -36,6 +87,17 @@ module.exports = [
   },
   pluginFactory('deleteExpiredUsers.remove', 'remove'),
 
+  // sendMfa service calls
+  pluginFactory('sendMfa.find', 'find'),
+  pluginFactory('sendMfa.patch', 'patch'),
+
+  // verifyMfa service calls
+  pluginFactory('verifyMfa.find', 'find'),
+  pluginFactory('verifyMfa.patch', 'patch'),
+
+  // passwordsChange service calls
+  pluginFactory('passwordsChange.find', 'find'),
+  pluginFactory('passwordsChange.patch', 'patch'),
 ];
 
 function shallowCloneObject(obj) {

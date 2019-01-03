@@ -58,7 +58,7 @@ async function resetPassword (
     });
   } else {
     throw new errors.BadRequest('resetToken and resetShortToken are missing. (authLocalMgnt)',
-      { errors: { $className: 'missingToken' } }
+      { errors: { $className: 'incorrectToken' } }
     );
   }
 
@@ -87,7 +87,7 @@ async function resetPassword (
     });
 
     new errors.BadRequest('Invalid token. Get for a new one. (authLocalMgnt)',
-      { errors: { $className: 'invalidToken' } }
+      { errors: { $className: 'incorrectToken' } }
     );
   }
 

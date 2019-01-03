@@ -10,7 +10,6 @@ const { verifySignupWithLongToken, verifySignupWithShortToken } = require('./ver
 
 const debug = makeDebug('authLocalMgnt:plugins-default');
 
-
 module.exports = [
   // main service handlers
   {
@@ -208,6 +207,9 @@ module.exports = [
       delete sanitizedUser.resetExpires;
       delete sanitizedUser.resetToken;
       delete sanitizedUser.resetShortToken;
+      delete sanitizedUser.mfaExpires;
+      delete sanitizedUser.mfaShortToken;
+      delete sanitizedUser.mfaType;
 
       return sanitizedUser;
     },

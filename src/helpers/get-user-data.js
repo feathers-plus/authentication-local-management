@@ -44,5 +44,10 @@ function getUserData (data, checks = []) {
       { errors: { $className: 'resetExpired' } });
   }
 
+  if (checks.includes('mfaNotExpired') && user.mfaExpires < Date.now()) {
+    throw new errors.BadRequest('Multi factor token has expired.',
+      { errors: { $className: 'mfaExpired' } });
+  }
+
   return user;
 }

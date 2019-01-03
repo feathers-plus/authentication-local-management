@@ -36,7 +36,7 @@ const optionsDefault = {
   identifyUserProps: [
     'email', 'dialablePhone'
   ],
-  actionsNoAuth: [
+  commandsNoAuth: [ // Unauthenticated users may run these commands
     'resendVerifySignup', 'verifySignupLong', 'verifySignupShort',
     'sendResetPwd', 'resetPwdLong', 'resetPwdShort',
   ],
