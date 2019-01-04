@@ -1,7 +1,7 @@
 
 const makeDebug = require('debug');
 const checkUnique = require('./check-unique');
-const identityChange = require('./identity-change');
+const changeProtectedFields = require('./change-protected-fields');
 const passwordChange = require('./password-change');
 const resendVerifySignup = require('./resend-verify-signup');
 const sendResetPwd = require('./send-reset-pwd');
@@ -25,12 +25,12 @@ module.exports = [
     },
   },
   {
-    name: 'identityChange',
-    desc: 'identityChange - default plugin, authentication-local-management',
+    name: 'changeProtectedFields',
+    desc: 'changeProtectedFields - default plugin, authentication-local-management',
     version: '1.0.0',
-    trigger: 'identityChange',
+    trigger: 'changeProtectedFields',
     run: async (accumulator, data, pluginsContext, pluginContext) => {
-      return await identityChange(pluginsContext,
+      return await changeProtectedFields(pluginsContext,
         data.value.user, data.value.password, data.value.changes, data.notifierOptions,
         data.authUser, data.provider
       );
@@ -124,9 +124,9 @@ module.exports = [
   // checkUnique service calls
   pluginFactory('checkUnique.find', 'find'),
 
-  // identityChange service calls
-  pluginFactory('identityChange.find', 'find'),
-  pluginFactory('identityChange.patch', 'patch'),
+  // changeProtectedFields service calls
+  pluginFactory('changeProtectedFields.find', 'find'),
+  pluginFactory('changeProtectedFields.patch', 'patch'),
 
   // passwordChange service calls
   pluginFactory('passwordChange.find', 'find'),

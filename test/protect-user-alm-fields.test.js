@@ -25,25 +25,6 @@ describe('prevent-changes-verification.test.js', () => {
 
   });
 
-  it('no default userIdentityFields fields changes', async () => {
-    contextPatch.data = { emailxx: 'email1', dialablePhonexx: 'dialablePhone1' };
-    const result = await protectUserAlmFields()(contextPatch);
-  });
-
-  it('default userIdentityFields fields changes', async () => {
-    contextPatch.data = { email: 'email1', dialablePhone: 'dialablePhone1' };
-
-    assert.throws(() => protectUserAlmFields()(contextPatch))
-  });
-
-  it('explicit userIdentityFields works', async () => {
-    contextPatch.data = { snailMail: 'email1', dialablePhone: 'dialablePhone1' };
-
-    assert.throws(() => protectUserAlmFields(
-      null, ['snailMail']
-    )(contextPatch))
-  });
-
   it('default verificationFields fields changes', async () => {
     contextPatch.data = { verifyToken: 'aaa' };
 
@@ -60,7 +41,7 @@ describe('prevent-changes-verification.test.js', () => {
     contextPatch.data = { myVerifyToken: 'aaa' };
 
     assert.throws(() => protectUserAlmFields(
-      null, null, ['myVerifyToken']
+      null, ['myVerifyToken']
     )(contextPatch))
   });
 

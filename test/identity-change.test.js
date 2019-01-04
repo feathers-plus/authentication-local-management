@@ -33,7 +33,7 @@ const usersId = [
 // Tests
 ['_id', 'id'].forEach(idType => {
   ['paginated', 'non-paginated'].forEach(pagination => {
-    describe(`identity-change.test.js ${pagination} ${idType}`, function () {
+    describe(`change-protected-fields.test.js ${pagination} ${idType}`, function () {
       this.timeout(timeoutEachTest);
 
       describe('standard', () => {
@@ -63,7 +63,7 @@ const usersId = [
             const userRec = clone(users_Id[1]);
 
             result = await authLocalMgntService.create({
-              action: 'identityChange',
+              action: 'changeProtectedFields',
               value: {
                 user: { email: userRec.email },
                 password: userRec.plainPassword,
@@ -85,7 +85,7 @@ const usersId = [
             const userRec = clone(users_Id[0]);
 
             result = await authLocalMgntService.create({
-              action: 'identityChange',
+              action: 'changeProtectedFields',
               value: {
                 user: { email: userRec.email },
                 password: userRec.plainPassword,
@@ -107,7 +107,7 @@ const usersId = [
             const userRec = clone(users_Id[0]);
 
             result = await authLocalMgntService.create({
-              action: 'identityChange',
+              action: 'changeProtectedFields',
               value: {
                 user: { email: userRec.email },
                 password: 'ghghghg',
@@ -160,7 +160,7 @@ const usersId = [
             const userRec = clone(users_Id[1]);
 
             result = await authLocalMgntService.create({
-              action: 'identityChange',
+              action: 'changeProtectedFields',
               value: {
                 user: { email: userRec.email },
                 password: userRec.plainPassword,
@@ -177,7 +177,7 @@ const usersId = [
             assert.deepEqual(
               stack[0].args,
               [
-                'identityChange',
+                'changeProtectedFields',
                 Object.assign({},
                   sanitizeUserForEmail(result),
                   extractProps(

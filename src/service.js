@@ -6,7 +6,7 @@ const merge = require('lodash.merge');
 const Plugins = require('../../plugin-scaffolding/src');
 const { authenticate } = require('@feathersjs/authentication').hooks;
 const checkUnique = require('./check-unique');
-const identityChange = require('./identity-change');
+const changeProtectedFields = require('./change-protected-fields');
 const passwordChange = require('./password-change');
 const resendVerifySignup = require('./resend-verify-signup');
 const pluginsDefault = require('./plugins-default');
@@ -20,52 +20,48 @@ let plugins;
 
 const optionsDefault = {
   almServicePath: 'localManagement',
-
   /* These fields are overridden by config/default.json */
   usersServicePath: '/users', // authentication.serviceNeed. Need default '/users' for test suite.
-  passwordField: 'password', // authentication.local.passwordField. Change with passwordChange.
+  passwordField: 'password', // authentication.local.passwordField. Change using passwordChange.
   /* Token lengths */
   longTokenLen: 15, // Len * 0.5. sendResetPwd len is 2 * longTokenLen + users.id.length + 3.
   shortTokenLen: 6,
-  shortTokenDigits: true,
+  shortTokenDigits: true, // Should short tokens be all digits.
   /* Token durations */
   verifyDelay: 1000 * 60 * 60 * 24 * 5, // 5 days for re/sendVerifySignup
   resetDelay: 1000 * 60 * 60 * 2, // 2 hours for sendResetPwd
   mfaDelay: 1000 * 60 * 60, // 1 hour for sendMfa
-
-  // identityChange -> changeProtectedUserFields
-  // number of old passwords to retain for each passwordField
-  // countEachPasswordHistory
-  // passwordHistory: array of arrays
-  // [nameField, passwordHash, timestamp]
-  //
-
-  /* These fields in users may be changed only with the changeProtectedUserFields command. */
+  /* These fields in users may be changed only with the changeUserFields command. */
   userIdentityFields: [ // Fields uniquely identifying the user.
     'email', 'dialablePhone'
   ],
-  userExtraPasswordFields: [ // Extra password-like fields to hash in addition to passwordField.
+  userExtraPasswordFields: [ // Additional password-like fields to hash, excluding passwordField.
     // e.g. 'pin', 'badge'
   ],
-  userProtectedFields: [ // Other protected fields.
-    // e.g. 'userIssuingInvitation'
+  userProtectedFields: [ // Other fields to protect from change.
+    'preferredComm' // e.g. 'userIssuingInvitation'
   ],
-
   /* Unauthenticated users may run these commands */
   commandsNoAuth: [
     'resendVerifySignup', 'verifySignupLong', 'verifySignupShort',
     'sendResetPwd', 'resetPwdLong', 'resetPwdShort',
   ],
-
-  /* Fields used by the notifier. */
+  /* Fields used by the notifier. ?????????????????????????????????????????????????????????????????????????????? */
   notifierEmailField: 'email',
   notifierDialablePhoneField: 'dialablePhone', // also needs to be coded in dialablePhoneNumber hook.
-
+  /* users may only change their own info when using changeProtectedFields, passwordChange */
   ownAcctOnly: true,
-  bcryptCompare: bcrypt.compare,
+  /* Allows a replacement hashPassword() hook to be used */
+  bcryptCompare: bcrypt.compare, // bcryptCompare(password, hash, (err, data) => {}).
   /* Values set during configuration */
   app: null, // Replaced by Feathers app.
   plugins: null, // Replaced by instantiated Plugins class during configuration.
+
+  // number of old passwords to retain for each passwordField
+  // countEachPasswordHistory
+  // passwordHistory: array of arrays
+  // [nameField, passwordHash, timestamp]
+  //
 };
 
 module.exports = authenticationLocalManagement;
@@ -98,9 +94,7 @@ function authenticationLocalManagement(options1 = {}) {
     }());
 
     // Get final options
-    options =  Object.assign(options, options1, { plugins });
-    options.userExtraPasswordFields = [options.passwordField].concat(options.userExtraPasswordFields);
-    pluginsContext.options = options;
+    pluginsContext.options = options =  Object.assign(options, options1, { plugins });
 
     // Store optiona
     app.set('localManagement', options);

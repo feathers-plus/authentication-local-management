@@ -25,7 +25,7 @@ const optionsDefault = {
   notifierDialablePhoneField: 'dialablePhone',
   userIdentityFields: ['email', 'dialablePhone'],
   userExtraPasswordFields: [],
-  userProtectedFields: [],
+  userProtectedFields: ['preferredComm'],
   plugins: null, // changes top default plugins
 };
 
@@ -96,8 +96,6 @@ describe('scaffolding.test.js', () => {
       delete options.plugins;
 
       const expected = Object.assign({}, optionsDefault, userMgntOptions);
-      expected.userExtraPasswordFields =
-        [expected.passwordField].concat(expected.userExtraPasswordFields);
       delete expected.app;
       delete expected.bcryptCompare;
       delete expected.authManagementHooks;

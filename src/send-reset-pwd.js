@@ -25,7 +25,7 @@ async function sendResetPwd (
     params: { query: identifyUser },
   });
 
-  const user1 = getUserData(users,  options.skipIsVerifiedCheck ? [] : ['isVerified']);
+  const user1 = getUserData(users,  options.commandsNoAuth.includes('sendResetPwd') ? [] : ['isVerified']);
 
   const user2 = Object.assign(user1, {
     resetExpires: Date.now() + options.resetDelay,

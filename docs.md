@@ -116,7 +116,7 @@ app.configure(authentication)
      - 'sendResetPwd'          From sendResetPwd API call
      - 'resetPwd'              From resetPwdLong and resetPwdShort API calls
      - 'passwordChange'        From passwordChange API call
-     - 'identityChange'        From identityChange API call
+     - 'changeProtectedFields'        From changeProtectedFields API call
    - user: user's item, minus password.
    - notifierOptions: notifierOptions option from resendVerifySignup and sendResetPwd API calls
 - longTokenLen: Half the length of the long token. Default is 15, giving 30-char tokens.
@@ -158,7 +158,7 @@ The service, for feathers-authenticate v1.x, requires hooks similar to:
     const isAction = (...args) => hook => args.includes(hook.data.action);
     app.service('localManagement').before({
       create: [
-        hooks.iff(isAction('passwordChange', 'identityChange'), auth.hooks.authenticate('jwt')),
+        hooks.iff(isAction('passwordChange', 'changeProtectedFields'), auth.hooks.authenticate('jwt')),
       ],
     });
 ```
@@ -200,12 +200,12 @@ localManagement.create({ action: 'resendVerifySignup',
   notifierOptions: {}, // options passed to options.notifier, e.g. {preferredComm: 'cellphone'}
 })
 
-// sign up or identityChange verification with long token
+// sign up or changeProtectedFields verification with long token
 localManagement.create({ action: 'verifySignupLong',
   value: verifyToken, // compares to .verifyToken
 })
 
-// sign up or identityChange verification with short token
+// sign up or changeProtectedFields verification with short token
 localManagement.create({ action: 'verifySignupShort',
   value: {
     user, // identify user, e.g. {email: 'a@a.com'}. See options.userIdentityFields.
@@ -246,7 +246,7 @@ localManagement.create({ action: 'passwordChange',
 })
 
 // change communications
-localManagement.create({ action: 'identityChange',
+localManagement.create({ action: 'changeProtectedFields',
   value: {
     user: identifyUser, // identify user, e.g. {email: 'a@a.com'}. See options.userIdentityFields.
     password, // current password for verification
@@ -288,10 +288,10 @@ localManagement.checkUnique(identifyUser, ownId, ifErrMsg)
 // resend sign up verification notification
 localManagement.resendVerifySignup(identifyUser, notifierOptions)
 
-// sign up or identityChange verification with long token
+// sign up or changeProtectedFields verification with long token
 localManagement.verifySignupLong(verifyToken)
 
-// sign up or identityChange verification with short token
+// sign up or changeProtectedFields verification with short token
 localManagement.verifySignupShort(verifyShortToken, identifyUser)
 
 // send forgotten password notification
@@ -307,7 +307,7 @@ localManagement.resetPwdShort(resetShortToken, identifyUser, password)
 localManagement.passwordChange(oldPassword, password, identifyUser)
 
 // change identity
-localManagement.identityChange(password, changesIdentifyUser, identifyUser)
+localManagement.changeProtectedFields(password, changesIdentifyUser, identifyUser)
 
 // Authenticate user and log on if user is verified. v0.x only.
 localManagement.authenticate(email, password)

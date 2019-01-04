@@ -5,23 +5,23 @@ const ensureObjPropsValid = require('./helpers/ensure-obj-props-valid');
 const getUserData = require('./helpers/get-user-data');
 const { comparePasswords, getId, getLongToken, getShortToken } = require('@feathers-plus/commons');
 
-const debug = makeDebug('authLocalMgnt:identityChange');
+const debug = makeDebug('authLocalMgnt:changeProtectedFields');
 
-module.exports = identityChange;
+module.exports = changeProtectedFields;
 
-async function identityChange (
+async function changeProtectedFields (
   { options, plugins }, identifyUser, password, changesIdentifyUser, notifierOptions,
   authUser, provider
 ) {
   // note this call does not update the authenticated user info in hooks.params.user.
-  debug('identityChange', password, changesIdentifyUser);
+  debug('changeProtectedFields', password, changesIdentifyUser);
   const usersService = options.app.service(options.usersServicePath);
   const usersServiceIdName = usersService.id;
 
   ensureObjPropsValid(identifyUser, options.userIdentityFields);
   ensureObjPropsValid(changesIdentifyUser, options.userIdentityFields);
 
-  const users = await plugins.run('identityChange.find', {
+  const users = await plugins.run('changeProtectedFields.find', {
     usersService,
     params: { query: identifyUser },
   });
@@ -42,7 +42,7 @@ async function identityChange (
     );
   }
 
-  const user2 = await plugins.run('identityChange.patch', {
+  const user2 = await plugins.run('changeProtectedFields.patch', {
     usersService,
     id: user1[usersServiceIdName],
     data: {
@@ -56,7 +56,7 @@ async function identityChange (
   const user3 = await plugins.run('sanitizeUserForNotifier', user2);
 
   const user4 = await plugins.run('notifier', {
-    type: 'identityChange',
+    type: 'changeProtectedFields',
     sanitizedUser: user3,
     notifierOptions,
   });

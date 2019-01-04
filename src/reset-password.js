@@ -62,9 +62,7 @@ async function resetPassword (
     );
   }
 
-  const checkProps = options.skipIsVerifiedCheck ?
-    ['resetNotExpired'] : ['resetNotExpired', 'isVerified'];
-  const user1 = getUserData(users, checkProps);
+  const user1 = getUserData(users, ['resetNotExpired']);
 
   Object.keys(tokens).forEach((key) => {
     promises.push(comparePasswords(tokens[key], user1[key], () =>

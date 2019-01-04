@@ -67,7 +67,7 @@ actionsNoAuth: [
 
 ### Client may only affect their own account
 
-Client calls for passwordChange and identityChange may now only affect their own account.
+Client calls for passwordChange and changeProtectedFields may now only affect their own account.
 This can be controlled by options.ownAcctOnly whose default is true.
 
 ### isVerified
@@ -199,7 +199,7 @@ It defaults to
     find: async (usersService, params = {}) =>
       await usersService.find(params),
   },
-  identityChange: {
+  changeProtectedFields: {
     find: async (usersService, params = {}) =>
       await usersService.find(params),
     patch: async (usersService, id, data, params = {}) =>
