@@ -3,7 +3,7 @@ const errors = require('@feathersjs/errors');
 const makeDebug = require('debug');
 const ensureObjPropsValid = require('./helpers/ensure-obj-props-valid');
 const ensureValuesAreStrings = require('./helpers/ensure-values-are-strings');
-const getUserData = require('./helpers/get-user-data');
+const getValidatedUser = require('./helpers/get-validated-user');
 
 const debug = makeDebug('authLocalMgnt:verifySignup');
 
@@ -44,7 +44,7 @@ async function verifySignup (
     params: { query },
   });
 
-  const user1 = getUserData(users, ['isNotVerifiedOrHasVerifyChanges', 'verifyNotExpired']);
+  const user1 = getValidatedUser(users, ['isNotVerifiedOrHasVerifyChanges', 'verifyNotExpired']);
 
   if (!Object.keys(tokens).every(key => tokens[key] === user1[key])) {
     await eraseVerifyProps(user1, user1.isVerified, user1.isInvitation);

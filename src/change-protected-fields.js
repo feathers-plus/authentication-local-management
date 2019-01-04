@@ -2,7 +2,7 @@
 const errors = require('@feathersjs/errors');
 const makeDebug = require('debug');
 const ensureObjPropsValid = require('./helpers/ensure-obj-props-valid');
-const getUserData = require('./helpers/get-user-data');
+const getValidatedUser = require('./helpers/get-validated-user');
 const { comparePasswords, getId, getLongToken, getShortToken } = require('@feathers-plus/commons');
 
 const debug = makeDebug('authLocalMgnt:changeProtectedFields');
@@ -26,7 +26,7 @@ async function changeProtectedFields (
     params: { query: identifyUser },
   });
 
-  const user1 = getUserData(users);
+  const user1 = getValidatedUser(users);
 
   if (options.ownAcctOnly && authUser && (getId(authUser) !== getId(user1))) {
     throw new errors.BadRequest('Can only affect your own account.',

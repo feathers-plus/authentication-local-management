@@ -1,7 +1,7 @@
 
 const makeDebug = require('debug');
 const ensureObjPropsValid = require('./helpers/ensure-obj-props-valid');
-const getUserData = require('./helpers/get-user-data');
+const getValidatedUser = require('./helpers/get-validated-user');
 const { getShortToken } = require('@feathers-plus/commons');
 
 const debug = makeDebug('authLocalMgnt:sendResetPwd');
@@ -24,7 +24,7 @@ async function sendMfa (
     params: { query: identifyUser },
   });
 
-  const user1 = getUserData(users,  options.skipIsVerifiedCheck ? [] : ['isVerified']);
+  const user1 = getValidatedUser(users,  options.skipIsVerifiedCheck ? [] : ['isVerified']);
 
   const user2 = Object.assign(user1, {
     mfaExpires: Date.now() + options.resetDelay,

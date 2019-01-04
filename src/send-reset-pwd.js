@@ -2,7 +2,7 @@
 const makeDebug = require('debug');
 const concatIDAndHash = require('./helpers/concat-id-and-hash');
 const ensureObjPropsValid = require('./helpers/ensure-obj-props-valid');
-const getUserData = require('./helpers/get-user-data');
+const getValidatedUser = require('./helpers/get-validated-user');
 const { getLongToken, getShortToken } = require('@feathers-plus/commons');
 
 const debug = makeDebug('authLocalMgnt:sendResetPwd');
@@ -25,7 +25,7 @@ async function sendResetPwd (
     params: { query: identifyUser },
   });
 
-  const user1 = getUserData(users,  options.commandsNoAuth.includes('sendResetPwd') ? [] : ['isVerified']);
+  const user1 = getValidatedUser(users,  options.commandsNoAuth.includes('sendResetPwd') ? [] : ['isVerified']);
 
   const user2 = Object.assign(user1, {
     resetExpires: Date.now() + options.resetDelay,

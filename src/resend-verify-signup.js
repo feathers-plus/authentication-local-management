@@ -1,7 +1,7 @@
 
 const makeDebug = require('debug');
 const ensureObjPropsValid = require('./helpers/ensure-obj-props-valid');
-const getUserData = require('./helpers/get-user-data');
+const getValidatedUser = require('./helpers/get-validated-user');
 const { getLongToken, getShortToken } = require('@feathers-plus/commons');
 
 const debug = makeDebug('authLocalMgnt:resendVerifySignup');
@@ -26,7 +26,7 @@ async function resendVerifySignup (
     params: { query: identifyUser },
   });
 
-  const user1 = getUserData(users, ['isNotVerified']);
+  const user1 = getValidatedUser(users, ['isNotVerified']);
 
   const user2 = await plugins.run('resendVerifySignup.patch', {
     usersService,

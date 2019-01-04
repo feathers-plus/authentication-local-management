@@ -6,7 +6,7 @@ const deconstructId = require('./deconstruct-id');
 const ensureFieldHasChanged = require('./ensure-field-has-changed');
 const ensureObjPropsValid = require('./ensure-obj-props-valid');
 const ensureValuesAreStrings = require('./ensure-values-are-strings');
-const getUserData = require('./get-user-data');
+const getValidatedUser = require('./get-validated-user');
 // const sanitizeUserForClient = require('./sanitize-user-for-client');
 // const sanitizeUserForNotifier = require('./sanitize-user-for-notifier');
 
@@ -18,7 +18,7 @@ module.exports = {
   ensureFieldHasChanged,
   ensureObjPropsValid,
   ensureValuesAreStrings,
-  getUserData
+  getValidatedUser
   // sanitizeUserForClient,
   // sanitizeUserForNotifier
 };

@@ -1,9 +1,9 @@
 
 const errors = require('@feathersjs/errors');
 
-module.exports = getUserData;
+module.exports = getValidatedUser;
 
-function getUserData (data, checks = []) {
+function getValidatedUser (data, checks = []) {
   if (Array.isArray(data) ? data.length === 0 : data.total === 0) {
     throw new errors.BadRequest('User not found.',
       { errors: { $className: 'badParams' } });

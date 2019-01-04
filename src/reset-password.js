@@ -4,7 +4,7 @@ const makeDebug = require('debug');
 const deconstructId = require('./helpers/deconstruct-id');
 const ensureObjPropsValid = require('./helpers/ensure-obj-props-valid');
 const ensureValuesAreStrings = require('./helpers/ensure-values-are-strings');
-const getUserData = require('./helpers/get-user-data');
+const getValidatedUser = require('./helpers/get-validated-user');
 const { comparePasswords } = require('@feathers-plus/commons');
 
 const debug = makeDebug('authLocalMgnt:resetPassword');
@@ -62,7 +62,7 @@ async function resetPassword (
     );
   }
 
-  const user1 = getUserData(users, ['resetNotExpired']);
+  const user1 = getValidatedUser(users, ['resetNotExpired']);
 
   Object.keys(tokens).forEach((key) => {
     promises.push(comparePasswords(tokens[key], user1[key], () =>
