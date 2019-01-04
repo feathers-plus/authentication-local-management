@@ -1,9 +1,9 @@
 
 const errors = require('@feathersjs/errors');
 
-module.exports = deconstructId;
+module.exports = decodeResetPasswordToken;
 
-function deconstructId (token) {
+function decodeResetPasswordToken (token) {
   if (!token.includes('___')) {
     throw new errors.BadRequest('Token is not in the correct format.',
       { errors: { $className: 'badParams' } }

@@ -1,6 +1,6 @@
 
 const makeDebug = require('debug');
-const concatIDAndHash = require('./helpers/concat-id-and-hash');
+const encodeResetPasswordToken = require('./helpers/encode-reset-password-token');
 const ensureObjPropsValid = require('./helpers/ensure-obj-props-valid');
 const getValidatedUser = require('./helpers/get-validated-user');
 const { getLongToken, getShortToken } = require('@feathers-plus/commons');
@@ -29,7 +29,7 @@ async function sendResetPwd (
 
   const user2 = Object.assign(user1, {
     resetExpires: Date.now() + options.resetDelay,
-    resetToken: concatIDAndHash(
+    resetToken: encodeResetPasswordToken(
       user1[usersServiceIdName],
       await getLongToken(options.longTokenLen)
     ),

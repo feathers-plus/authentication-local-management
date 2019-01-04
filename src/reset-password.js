@@ -1,7 +1,7 @@
 
 const errors = require('@feathersjs/errors');
 const makeDebug = require('debug');
-const deconstructId = require('./helpers/deconstruct-id');
+const decodeResetPasswordToken = require('./helpers/decode-reset-password-token');
 const ensureObjPropsValid = require('./helpers/ensure-obj-props-valid');
 const ensureValuesAreStrings = require('./helpers/ensure-values-are-strings');
 const getValidatedUser = require('./helpers/get-validated-user');
@@ -45,7 +45,7 @@ async function resetPassword (
   let users;
 
   if (tokens.resetToken) {
-    let id = deconstructId(tokens.resetToken);
+    let id = decodeResetPasswordToken(tokens.resetToken);
 
     users = await plugins.run('resetPassword.tokenGet', {
       usersService,
