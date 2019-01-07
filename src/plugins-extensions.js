@@ -1,5 +1,8 @@
 
 const makeDebug = require('debug');
+const errors = require('@feathersjs/errors');
+const { comparePasswords } = require('@feathers-plus/commons');
+
 const deleteExpiredUsers = require('./delete-expired-users');
 const sendMfa = require('./send-mfa');
 const verifyMfa = require('./verify-mfa');
@@ -69,6 +72,61 @@ module.exports = [
   // verifyMfa service calls
   pluginFactory('verifyMfa.find', 'find'),
   pluginFactory('verifyMfa.patch', 'patch'),
+
+  // passwordHistory utilities
+  {
+    trigger: 'passwordHistoryExists',
+    setup: async (pluginsContext, pluginContext) => {
+      pluginsContext.options.maxPasswordsEachField = 3;
+    },
+    run: async (accumulator, { passwordHistory, passwordLikeField, clearPassword }, { options } , pluginContext) => {
+      passwordHistory = passwordHistory || []; // [ [passwordField, datetime, hash], ... ]
+      console.log('passwordHistoryExists', options.maxPasswordsEachField, passwordHistory, passwordLikeField, clearPassword);
+
+      for (let i = 0, leni = passwordHistory.length; i < leni; i++) {
+        console.log('passwordHistoryExists', i);
+        const [entryPasswordField, datetime, hashedPassword] = passwordHistory[i];
+
+        if (entryPasswordField === passwordLikeField) {
+          const passwordUsed = await comparePasswords(
+            clearPassword,
+            hashedPassword,
+            () => true,
+            options.bcryptCompare
+          );
+
+          if (passwordUsed) return true;
+        }
+      }
+
+      return false;
+    },
+  },
+  {
+    trigger: 'passwordHistoryAdd',
+    run: async (accumulator, { passwordHistory, passwordLikeField, hashedPassword }, { options } , pluginContext) => {
+      passwordHistory = passwordHistory || []; // [ [passwordField, datetime, hashedPassword], ... ]
+      console.log('passwordHistoryAdd', options.maxPasswordsEachField, passwordHistory, passwordLikeField, hashedPassword);
+
+      let count = 0;
+      let lastEntry;
+
+      passwordHistory.forEach(([entryPasswordField, _, entryHash], i) => {
+        if (entryPasswordField === passwordLikeField) {
+          lastEntry = i;
+          count =+ 1;
+        }
+      });
+
+      if (count > options.maxPasswordsEachField) { // remove oldest entry for field
+        passwordHistory.splice(lastEntry, 1);
+      }
+
+      passwordHistory.unshift([passwordLikeField, Date.now(), hashedPassword]);
+
+      return passwordHistory;
+    },
+  },
 ];
 
 function shallowCloneObject(obj) {

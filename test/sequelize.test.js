@@ -16,18 +16,42 @@ const time2 = 1541878856545;
 const time2Str = '2018-11-10T19:40:56.545Z';
 
 const internalRecs = [
-  { email: 'a', password: 'aa', isVerified: false, verifyExpires: time1, verifyChanges: { foo: 'bar' }, resetExpires: time2 },
-  { email: 'b', password: 'bb', isVerified: true,  verifyExpires: time1, verifyChanges: { foo: 'bar' }, resetExpires: time2 },
+  { email: 'a', password: 'aa', phone: '+123', dialablePhone: '123', preferredComm: 'sms',
+    verifyToken: 'abc', verifyShortToken: '123', resetToken: 'abc', resetShortToken: '123',
+    mfaShortToken: '123', mfaType: 'email',
+    isInvitation: true,  isVerified: false, verifyExpires: time1, verifyChanges: { foo: 'bar' },
+    resetExpires: time2, mfaExpires: time1, passwordHistory: [] },
+  { email: 'b', password: 'bb', phone: '+123', dialablePhone: '123', preferredComm: 'sms',
+    verifyToken: 'abc', verifyShortToken: '123', resetToken: 'abc', resetShortToken: '123',
+    mfaShortToken: '123', mfaType: 'email',
+    isInvitation: false, isVerified: true,  verifyExpires: time1, verifyChanges: { foo: 'bar' },
+    resetExpires: time2, mfaExpires: null, passwordHistory: [] },
 ];
 
 const sequelizeRecsIn = [
-  { email: 'a', password: 'aa', isVerified: 0, verifyExpires: time1, verifyChanges: '{"foo":"bar"}', resetExpires: time2 },
-  { email: 'b', password: 'bb', isVerified: 1, verifyExpires: time1, verifyChanges: '{"foo":"bar"}', resetExpires: time2 },
+  { email: 'a', password: 'aa', phone: '+123', dialablePhone: '123', preferredComm: 'sms',
+    verifyToken: 'abc', verifyShortToken: '123', resetToken: 'abc', resetShortToken: '123',
+    mfaShortToken: '123', mfaType: 'email',
+    isInvitation: 1, isVerified: 0, verifyExpires: time1, verifyChanges: '{"foo":"bar"}',
+    resetExpires: time2, mfaExpires: time1, passwordHistory: '[]' },
+  { email: 'b', password: 'bb', phone: '+123', dialablePhone: '123', preferredComm: 'sms',
+    verifyToken: 'abc', verifyShortToken: '123', resetToken: 'abc', resetShortToken: '123',
+    mfaShortToken: '123', mfaType: 'email',
+    isInvitation: 0, isVerified: 1, verifyExpires: time1, verifyChanges: '{"foo":"bar"}',
+    resetExpires: time2, mfaExpires: null, passwordHistory: '[]' },
 ];
 
 const sequelizeRecsOut = [
-  { email: 'a', password: 'aa', isVerified: 0, verifyExpires: time1Str, verifyChanges: '{"foo":"bar"}', resetExpires: time2Str },
-  { email: 'b', password: 'bb', isVerified: 1, verifyExpires: time1Str, verifyChanges: '{"foo":"bar"}', resetExpires: time2Str },
+  { email: 'a', password: 'aa', phone: '+123', dialablePhone: '123', preferredComm: 'sms',
+    verifyToken: 'abc', verifyShortToken: '123', resetToken: 'abc', resetShortToken: '123',
+    mfaShortToken: '123', mfaType: 'email',
+    isInvitation: 1, isVerified: 0, verifyExpires: time1Str, verifyChanges: '{"foo":"bar"}',
+    resetExpires: time2Str, mfaExpires: time1Str, passwordHistory: '[]' },
+  { email: 'b', password: 'bb', phone: '+123', dialablePhone: '123', preferredComm: 'sms',
+    verifyToken: 'abc', verifyShortToken: '123', resetToken: 'abc', resetShortToken: '123',
+    mfaShortToken: '123', mfaType: 'email',
+    isInvitation: 0, isVerified: 1, verifyExpires: time1Str, verifyChanges: '{"foo":"bar"}',
+    resetExpires: time2Str, mfaExpires: null, passwordHistory: '[]' },
 ];
 
 function tracer(name) {
@@ -102,15 +126,6 @@ const makeUsersService = () => function (app) {
 };
 
 function createUsersModel(app) {
-  /*
-  authentication-local-management$ sqlite3 ./testdata/users.sqlite3
-  SQLite version 3.19.3 2017-06-08 14:26:16
-  Enter ".help" for usage hints.
-  sqlite> .schema
-  sqlite> CREATE TABLE 'Users' ('id' INTEGER PRIMARY KEY AUTOINCREMENT, 'email' VARCHAR(60), 'password' VARCHAR(60), 'isVerified' INTEGER, 'verifyExpires' DATETIME, 'verifyToken' VARCHAR(60), 'verifyShortToken' VARCHAR(8), 'verifyChanges' VARCHAR(255), 'resetExpires' INTEGER, 'resetToken' VARCHAR(60), 'resetShortToken' VARCHAR(8));
-  sqlite>
-   */
-
   sequelize(app);
 
   return sequelizeClient.define('users',
@@ -123,6 +138,22 @@ function createUsersModel(app) {
         type: DataTypes.STRING,
         allowNull: false
       },
+      phone: {
+        type: DataTypes.STRING,
+        allowNull: false
+      },
+      dialablePhone: {
+        type: DataTypes.STRING,
+        allowNull: false
+      },
+      preferredComm: {
+        type: DataTypes.STRING,
+        allowNull: false
+      },
+      isInvitation: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+      },
       isVerified: {
         type: DataTypes.INTEGER,
         allowNull: false
@@ -130,12 +161,42 @@ function createUsersModel(app) {
       verifyExpires: {
         type: DataTypes.DATE
       },
+      verifyToken: {
+        type: DataTypes.STRING,
+        allowNull: false
+      },
+      verifyShortToken: {
+        type: DataTypes.STRING,
+        allowNull: false
+      },
       verifyChanges: {
         type: DataTypes.STRING
       },
       resetExpires: {
         type: DataTypes.DATE
-      }
+      },
+      resetToken: {
+        type: DataTypes.STRING,
+        allowNull: false
+      },
+      resetShortToken: {
+        type: DataTypes.STRING,
+        allowNull: false
+      },
+      mfaExpires: {
+        type: DataTypes.DATE
+      },
+      mfaShortToken: {
+        type: DataTypes.STRING,
+        allowNull: false
+      },
+      mfaType: {
+        type: DataTypes.STRING,
+        allowNull: false
+      },
+      passwordHistory: {
+        type: DataTypes.STRING
+      },
     },
     {
       hooks: {

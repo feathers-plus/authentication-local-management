@@ -125,10 +125,13 @@ By default it converts
 ```txt
  Field name         Internal            Sequelize & Knex
 -----------         --------            ----------------
+ isInvitation       Boolean             INTEGER
  isVerified         Boolean             INTEGER
  verifyExpires      Date.now()          DATE (*)
  verifyChanges      Object              STRING, JSON.stringify
  resetExpires       Date.now()          DATE (*)
+ mfaExpires         Date.now()          DATE (*)
+ passwordHistory    Array               STRING, JSON.stringify
 ```
 
 (*) The hook passes the 2 datetimes to the adapter as Date.now() when used as a before hook.
@@ -137,12 +140,13 @@ The hook itself converts the datetimes back to Date.now() when run as an after h
 
 There are options to
 - Customize the datetime conversion,
-- Customize the verifyChanges conversion,
+- Customize the convertNonSqlType conversion,
 - Skip converting any of these fields.
 
 The test/sequelize.test.js module uses the feathers-sequelize adapter with an sqlite3 table created with
 ```txt
-authentication-local-management$ sqlite3 ./testdata/users.sqlite3
+authentication-local-management$ touch ./test-data/users.sqlite
+authentication-local-management$ sqlite3 ./test-data/users.sqlite
 SQLite version 3.19.3 2017-06-08 14:26:16
 Enter ".help" for usage hints.
 sqlite> .schema
@@ -152,6 +156,7 @@ sqlite> CREATE TABLE 'Users' ('id' INTEGER PRIMARY KEY AUTOINCREMENT,
   'phone'            VARCHAR( 30),
   'dialablePhone'    VARCHAR( 15),
   'preferredComm'    VARCHAR(  5),
+  'isInvitation'     INTEGER,
   'isVerified'       INTEGER, 
   'verifyExpires'    DATETIME, 
   'verifyToken'      VARCHAR( 60),
@@ -159,30 +164,93 @@ sqlite> CREATE TABLE 'Users' ('id' INTEGER PRIMARY KEY AUTOINCREMENT,
   'verifyChanges'    VARCHAR(255), 
   'resetExpires'     INTEGER, 
   'resetToken'       VARCHAR( 60), 
-  'resetShortToken'  VARCHAR(  8)
- );
-sqlite> 
+  'resetShortToken'  VARCHAR(  8),
+  'mfaExpires'       INTEGER, 
+  'mfaShortToken'    VARCHAR(  8),
+  'passwordHistory'  VARCHAR(512),
+  'createdAt'        DATETIME,
+  'updatedAt'        DATETIME
+   );
+sqlite> .quit
 ```
 
 Module users.sequelize.js much be customized to reflect the changes conversionSql makes:
 
 ```js
-// !code: moduleExports
-{
-  isVerified: {
-    type: DataTypes.INTEGER,
-  },
-  verifyExpires: {
-    type: DataTypes.DATE,
-  },
-  verifyChange: {
-    type: DataTypes.STRING
-  },
-  resetExpires: {
-    type: DataTypes.DATE
-  },
-}
-// !end
+  sequelizeClient.define('users',
+    {
+      email: {
+        type: DataTypes.STRING,
+        allowNull: false
+      },
+      password: {
+        type: DataTypes.STRING,
+        allowNull: false
+      },
+      phone: {
+        type: DataTypes.STRING,
+        allowNull: false
+      },
+      dialablePhone: {
+        type: DataTypes.STRING,
+        allowNull: false
+      },
+      preferredComm: {
+        type: DataTypes.STRING,
+        allowNull: false
+      },
+      isInvitation: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+      },
+      isVerified: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+      },
+      verifyExpires: {
+        type: DataTypes.DATE
+      },
+      verifyToken: {
+        type: DataTypes.STRING,
+        allowNull: false
+      },
+      verifyShortToken: {
+        type: DataTypes.STRING,
+        allowNull: false
+      },
+      verifyChanges: {
+        type: DataTypes.STRING
+      },
+      resetExpires: {
+        type: DataTypes.DATE
+      },
+      resetToken: {
+        type: DataTypes.STRING,
+        allowNull: false
+      },
+      resetShortToken: {
+        type: DataTypes.STRING,
+        allowNull: false
+      },
+      mfaExpires: {
+        type: DataTypes.DATE
+      },
+      mfaShortToken: {
+        type: DataTypes.STRING,
+        allowNull: false
+      },
+      passwordHistory: {
+        type: DataTypes.STRING
+      },
+    },
+    {
+      hooks: {
+        beforeCount(options) {
+          options.raw = true;
+        },
+      },
+    },
+  );
 ```
 
 ### Customization of service calls

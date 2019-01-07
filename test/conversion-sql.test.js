@@ -4,8 +4,8 @@ const { conversionSql } = require('../src/index').hooks;
 const { timeoutEachTest } = require('./helpers/config');
 
 const convertDatetime = {
-  before: dateNow => new Date(dateNow).toISOString(),
-  after: sqlDate => new Date(sqlDate).valueOf(),
+  sql: dateNow => new Date(dateNow).toISOString(),
+  js: sqlDate => new Date(sqlDate).valueOf(),
 };
 
 describe('conversion-sql.test.js', function () {
@@ -123,7 +123,7 @@ describe('conversion-sql.test.js', function () {
     });
 
     it('uses datetime converter', () => {
-      const newContext = conversionSql(convertDatetime)(context);
+      const newContext = conversionSql(null, null, { date: convertDatetime })(context);
 
       assert.deepEqual(newContext.data, {
         isInvitation: 0,
@@ -142,7 +142,7 @@ describe('conversion-sql.test.js', function () {
     });
 
     it('respects fields to ignore', () => {
-      const newContext = conversionSql(null, null, ['isInvitation', 'isVerified', 'verifyChanges'])(context);
+      const newContext = conversionSql(null, ['isInvitation', 'isVerified', 'verifyChanges'])(context);
 
       assert.deepEqual(newContext.data, {
         isInvitation: false,
@@ -296,7 +296,7 @@ describe('conversion-sql.test.js', function () {
     });
 
     it('uses datetime converter', () => {
-      const newContext = conversionSql(convertDatetime)(contextISO);
+      const newContext = conversionSql(null, null, { date: convertDatetime })(contextISO);
 
       assert.deepEqual(newContext.result, {
         isInvitation: false,
@@ -379,7 +379,7 @@ describe('conversion-sql.test.js', function () {
     });
 
     it('respects fields to ignore', () => {
-      const newContext = conversionSql(null, null, ['isInvitation', 'isVerified', 'verifyChanges'])(context);
+      const newContext = conversionSql(null, ['isInvitation', 'isVerified', 'verifyChanges'])(context);
 
       assert.deepEqual(newContext.result, {
         isInvitation: 0,

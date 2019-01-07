@@ -58,7 +58,7 @@ const optionsDefault = {
   plugins: null, // Replaced by instantiated Plugins class during configuration.
 
   // number of old passwords to retain for each passwordField
-  // countEachPasswordHistory
+  // maxPasswordsEachField
   // passwordHistory: array of arrays
   // [nameField, passwordHash, timestamp]
   //

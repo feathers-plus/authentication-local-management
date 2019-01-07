@@ -26,6 +26,7 @@ const optionsDefault = {
   userIdentityFields: ['email', 'dialablePhone'],
   userExtraPasswordFields: [],
   userProtectedFields: ['preferredComm'],
+  maxPasswordsEachField: 3,
   plugins: null, // changes top default plugins
 };
 

@@ -130,6 +130,7 @@ module.exports = [
 
   // passwordChange service calls
   pluginFactory('passwordChange.find', 'find'),
+  pluginFactory('passwordChange.get', 'get'),
   pluginFactory('passwordChange.patch', 'patch'),
 
   // resendVerifySignup service calls
