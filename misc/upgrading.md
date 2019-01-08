@@ -105,18 +105,18 @@ The second most common issue raised with f-a-m was how to use it with Sequelize/
 f-a-m expected the user-entity model to be in a JS-friendly format,
 and the dev was expected to use hooks to reformat that to the Sequelize/Knex model.
 
-The conversionSql hook has been introduced as a convenience.
+The sequelizeConvertAlm hook has been introduced as a convenience.
 It converts the isVerified, verifiedExpires, verifyChanges, resetExpires fields created by this repo.
 Its used on the user-entity as follows:
 ```js
-const { conversionSql } = require('authentication-local-management').hooks;
+const { sequelizeConvertAlm } = require('authentication-local-management').hooks;
 
 module.exports = {
   before: {
-    all: conversionSql(),
+    all: sequelizeConvertAlm(),
   },
   after: {
-    all: conversionSql(),
+    all: sequelizeConvertAlm(),
   },
 };
 ```
@@ -174,7 +174,7 @@ sqlite> CREATE TABLE 'Users' ('id' INTEGER PRIMARY KEY AUTOINCREMENT,
 sqlite> .quit
 ```
 
-Module users.sequelize.js much be customized to reflect the changes conversionSql makes:
+Module users.sequelize.js much be customized to reflect the changes sequelizeConvertAlm makes:
 
 ```js
   sequelizeClient.define('users',
@@ -416,19 +416,19 @@ a-l-m externalizes some of the required processing into hooks.
 This allows you to customize things like the hashing function.
 
 The user-entity hooks would typically be configured as shown below.
-Note the conversionSql hook is used only with user-entities using the Sequelize or Knex adapter.
+Note the sequelizeConvertAlm hook is used only with user-entities using the Sequelize or Knex adapter.
 
 ```js
 const { authenticate } = require('@feathersjs/authentication').hooks;
 const { hashPassword, protect } = require('@feathersjs/authentication-local').hooks;
-const { addVerification, conversionSql, isVerified } = 
+const { addVerification, sequelizeConvertAlm, isVerified } = 
   require('@feathers-plus/authentication-local-management').hooks;
 
 let moduleExports = {
   before: {
     all: [
       // Convert isVerified, verifyExpires, verifyChanges, resetExpires to SQL format.
-      conversionSql(),
+      sequelizeConvertAlm(),
     ],
     find: [
       authenticate('jwt'),
@@ -453,7 +453,7 @@ let moduleExports = {
   after: {
     all: [
       // Convert isVerified, verifyExpires, verifyChanges, resetExpires from SQL format.
-      conversionSql(),
+      sequelizeConvertAlm(),
       protect('password') /* Must always be the last hook */ 
    ],
     find: [],

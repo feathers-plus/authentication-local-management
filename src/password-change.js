@@ -4,7 +4,7 @@ const makeDebug = require('debug');
 const ensureObjPropsValid = require('./helpers/ensure-obj-props-valid');
 const ensureValuesAreStrings = require('./helpers/ensure-values-are-strings');
 const getValidatedUser = require('./helpers/get-validated-user');
-const { comparePasswords, getId } = require('@feathers-plus/commons');
+const { getId } = require('@feathers-plus/commons');
 
 const debug = makeDebug('authLocalMgnt:passwordChange');
 
@@ -35,16 +35,15 @@ async function passwordChange (
     );
   }
 
-  await comparePasswords(
-    oldPassword,
-    user1[options.passwordField],
-    () => {
-      throw new errors.BadRequest('Current password is incorrect.',
-        { errors: { $className: 'badPassword' } }
-      );
-    },
-    options.bcryptCompare
-  );
+  await new Promise((resolve, reject) => {
+    options.bcryptCompare(oldPassword, user1[options.passwordField], (err, data1) => {
+      return (err || !data1) ?
+        reject(new errors.BadRequest('Current password is incorrect.',
+          { errors: { $className: 'badPassword' } }
+        )) :
+        resolve();
+    });
+  });
 
   if (plugins.has('passwordHistoryExists')) {
     const exists = await plugins.run('passwordHistoryExists', {
@@ -52,7 +51,6 @@ async function passwordChange (
       passwordLikeField: options.passwordField,
       clearPassword: password,
     });
-    console.log(`New password has${exists ? '' : ' NOT'} been used before.`);
 
     if (exists) {
       throw new errors.BadRequest('This password has been previously used. Try a new one.',
@@ -78,13 +76,11 @@ async function passwordChange (
 
 
     // Add the new password to password history
-    console.log('user3.passwordHistory was =', user3.passwordHistory);
     const passwordHistory = await plugins.run('passwordHistoryAdd', {
       passwordHistory: user3.passwordHistory,
       passwordLikeField: passwordField,
       hashedPassword: user3[passwordField],
     });
-    console.log('user3.passwordHistory now =', passwordHistory);
 
     user4 = await plugins.run('passwordChange.patch', {
       usersService,

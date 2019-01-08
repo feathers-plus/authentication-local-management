@@ -1,7 +1,6 @@
 
 const makeDebug = require('debug');
 const errors = require('@feathersjs/errors');
-const { comparePasswords } = require('@feathers-plus/commons');
 
 const deleteExpiredUsers = require('./delete-expired-users');
 const sendMfa = require('./send-mfa');
@@ -81,21 +80,16 @@ module.exports = [
     },
     run: async (accumulator, { passwordHistory, passwordLikeField, clearPassword }, { options } , pluginContext) => {
       passwordHistory = passwordHistory || []; // [ [passwordField, datetime, hash], ... ]
-      console.log('passwordHistoryExists', options.maxPasswordsEachField, passwordHistory, passwordLikeField, clearPassword);
 
       for (let i = 0, leni = passwordHistory.length; i < leni; i++) {
-        console.log('passwordHistoryExists', i);
-        const [entryPasswordField, datetime, hashedPassword] = passwordHistory[i];
+        const [entryPasswordField, _, hashedPassword] = passwordHistory[i];
 
         if (entryPasswordField === passwordLikeField) {
-          const passwordUsed = await comparePasswords(
-            clearPassword,
-            hashedPassword,
-            () => true,
-            options.bcryptCompare
-          );
+          const hasPasswordBeenUsed = new Promise(resolve => {
+            options.bcryptCompare(clearPassword, hashedPassword, (err, data1) => resolve(err || !data1));
+          });
 
-          if (passwordUsed) return true;
+          if (hasPasswordBeenUsed) return true;
         }
       }
 
@@ -106,7 +100,6 @@ module.exports = [
     trigger: 'passwordHistoryAdd',
     run: async (accumulator, { passwordHistory, passwordLikeField, hashedPassword }, { options } , pluginContext) => {
       passwordHistory = passwordHistory || []; // [ [passwordField, datetime, hashedPassword], ... ]
-      console.log('passwordHistoryAdd', options.maxPasswordsEachField, passwordHistory, passwordLikeField, hashedPassword);
 
       let count = 0;
       let lastEntry;

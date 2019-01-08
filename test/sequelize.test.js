@@ -3,7 +3,7 @@ const assert = require('chai').assert;
 const createService = require('feathers-sequelize');
 const feathers = require('@feathersjs/feathers');
 const Sequelize = require('sequelize')
-const { conversionSql } = require('../src/hooks');
+const { sequelizeConvertAlm } = require('../src/hooks');
 const { timeoutEachTest } = require('./helpers/config');
 
 const DataTypes = Sequelize.DataTypes;
@@ -117,10 +117,10 @@ const makeUsersService = () => function (app) {
 
   app.service('users').hooks({
     before: {
-      all: [tracer('beforeIn'), conversionSql(), tracer('beforeOut')],
+      all: [tracer('beforeIn'), sequelizeConvertAlm(), tracer('beforeOut')],
     },
     after: {
-      all: [tracer('afterIn'), conversionSql(), tracer('afterOut')],
+      all: [tracer('afterIn'), sequelizeConvertAlm(), tracer('afterOut')],
     }
   });
 };

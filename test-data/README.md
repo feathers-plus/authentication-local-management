@@ -4,18 +4,18 @@ The second most common issue raised with f-a-m was how to use it with Sequelize/
 f-a-m expected the user-entity model to be in a JS-friendly format,
 and the dev was expected to use hooks to reformat that to the Sequelize/Knex model.
 
-The conversionSql hook has been introduced as a convenience.
+The sequelizeConvertAlm hook has been introduced as a convenience.
 It converts the isVerified, verifiedExpires, verifyChanges, resetExpires fields created by this repo.
 Its used on the user-entity as follows:
 ```js
-const { conversionSql } = require('authentication-local-management').hooks;
+const { sequelizeConvertAlm } = require('authentication-local-management').hooks;
 
 module.exports = {
   before: {
-    all: conversionSql(),
+    all: sequelizeConvertAlm(),
   },
   after: {
-    all: conversionSql(),
+    all: sequelizeConvertAlm(),
   },
 };
 ```
@@ -74,7 +74,7 @@ sqlite> CREATE TABLE 'Users' ('id' INTEGER PRIMARY KEY AUTOINCREMENT,
 sqlite> .quit
 ```
 
-Module users.sequelize.js much be customized to reflect the changes conversionSql makes:
+Module users.sequelize.js much be customized to reflect the changes sequelizeConvertAlm makes:
 
 ```js
   sequelizeClient.define('users',

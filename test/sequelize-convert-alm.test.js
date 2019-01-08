@@ -1,6 +1,6 @@
 
 const assert = require('chai').assert;
-const { conversionSql } = require('../src/index').hooks;
+const { sequelizeConvertAlm } = require('../src/index').hooks;
 const { timeoutEachTest } = require('./helpers/config');
 
 const convertDatetime = {
@@ -8,7 +8,7 @@ const convertDatetime = {
   js: sqlDate => new Date(sqlDate).valueOf(),
 };
 
-describe('conversion-sql.test.js', function () {
+describe('sequelize-convert-alm.test.js', function () {
   this.timeout(timeoutEachTest);
   let context;
 
@@ -72,7 +72,7 @@ describe('conversion-sql.test.js', function () {
     });
 
     it('converts single object', () => {
-      const newContext = conversionSql()(context);
+      const newContext = sequelizeConvertAlm()(context);
 
       assert.deepEqual(newContext.data, {
         isInvitation: 0,
@@ -91,7 +91,7 @@ describe('conversion-sql.test.js', function () {
     });
 
     it('converts array of objects', () => {
-      const newContext = conversionSql()(contextArray);
+      const newContext = sequelizeConvertAlm()(contextArray);
 
       assert.deepEqual(newContext.data, [{
         isInvitation: 0,
@@ -123,7 +123,7 @@ describe('conversion-sql.test.js', function () {
     });
 
     it('uses datetime converter', () => {
-      const newContext = conversionSql(null, null, { date: convertDatetime })(context);
+      const newContext = sequelizeConvertAlm(null, null, { date: convertDatetime })(context);
 
       assert.deepEqual(newContext.data, {
         isInvitation: 0,
@@ -142,7 +142,7 @@ describe('conversion-sql.test.js', function () {
     });
 
     it('respects fields to ignore', () => {
-      const newContext = conversionSql(null, ['isInvitation', 'isVerified', 'verifyChanges'])(context);
+      const newContext = sequelizeConvertAlm(null, ['isInvitation', 'isVerified', 'verifyChanges'])(context);
 
       assert.deepEqual(newContext.data, {
         isInvitation: false,
@@ -277,7 +277,7 @@ describe('conversion-sql.test.js', function () {
     });
 
     it('converts single object', () => {
-      const newContext = conversionSql()(context);
+      const newContext = sequelizeConvertAlm()(context);
 
       assert.deepEqual(newContext.result, {
         isInvitation: false,
@@ -296,7 +296,7 @@ describe('conversion-sql.test.js', function () {
     });
 
     it('uses datetime converter', () => {
-      const newContext = conversionSql(null, null, { date: convertDatetime })(contextISO);
+      const newContext = sequelizeConvertAlm(null, null, { date: convertDatetime })(contextISO);
 
       assert.deepEqual(newContext.result, {
         isInvitation: false,
@@ -315,7 +315,7 @@ describe('conversion-sql.test.js', function () {
     });
 
     it('converts array of objects, not paginated', () => {
-      const newContext = conversionSql()(contextArray);
+      const newContext = sequelizeConvertAlm()(contextArray);
 
       assert.deepEqual(newContext.result, [{
         isInvitation: false,
@@ -347,7 +347,7 @@ describe('conversion-sql.test.js', function () {
     });
 
     it('converts array of objects, paginated', () => {
-      const newContext = conversionSql()(contextPaginated);
+      const newContext = sequelizeConvertAlm()(contextPaginated);
 
       assert.deepEqual(newContext.result.data, [{
         isInvitation: false,
@@ -379,7 +379,7 @@ describe('conversion-sql.test.js', function () {
     });
 
     it('respects fields to ignore', () => {
-      const newContext = conversionSql(null, ['isInvitation', 'isVerified', 'verifyChanges'])(context);
+      const newContext = sequelizeConvertAlm(null, ['isInvitation', 'isVerified', 'verifyChanges'])(context);
 
       assert.deepEqual(newContext.result, {
         isInvitation: 0,
